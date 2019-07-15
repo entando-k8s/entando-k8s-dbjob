@@ -2,7 +2,7 @@
 Entando K8S Database Job
 
 This is a very simplistic little Java program that can create a schema/user pair in different database management systems.
-The execpted input:
+The execpected input:
 1. DATABASE_SERVER_HOST is the ip address or hostname of the database server
 2. DATABASE_SERVER_PORT
 3. DATABASE_VENDOR: one of 'postgresql', 'oracle'
