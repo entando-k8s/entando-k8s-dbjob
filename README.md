@@ -9,9 +9,9 @@ The execpted input:
 4. DATABASE_NAME: the name of the database set aside for Entando
 5. DATABASE_ADMIN_USER is a user on the specified database that has the necessary privileges to add schemas and other users, and set their priviliges
   (Please create a user. Don't use 'postgres' or 'sys' or any of the built in users. These lead to complications that are not supported)
-6. DATABASE_ADMIN_PASSWORD: the password of the abovementioned user
+6. DATABASE_ADMIN_PASSWORD: the password of the above mentioned user
 7. DATABASE_USER: user/schema pair to be created
-8. DATABASE_PASSWORD: expected password for abovementioned user
+8. DATABASE_PASSWORD: expected password for above mentioned user
 
 The expected output is:
 1. A schema with the same name as the user provided, as specified in the DATABASE_USER environment variable
