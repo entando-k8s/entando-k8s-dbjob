@@ -1,0 +1,29 @@
+version: '2.1'
+
+services:
+  postgresql:
+    image: centos/postgresql-96-centos7:latest
+    hostname: postgresql
+    environment:
+      POSTGRESQL_USER: testAdmin
+      POSTGRESQL_PASSWORD: testAdmin
+      POSTGRESQL_ADMIN_PASSWORD: postgres
+      POSTGRESQL_DATABASE: test
+    healthcheck:
+      test: ["CMD", "/usr/libexec/check-container"]
+      interval: 3s
+      timeout: 10s
+      retries: 30
+
+  entando-k8s-dbjob-test:
+    image: entando-k8s-dbjob-test
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MVN_COMMAND: ${MVN_COMMAND}
+    environment:
+      DATABASE_SERVER_HOST: postgresql
+    depends_on:
+      postgresql:
+        condition: service_healthy
