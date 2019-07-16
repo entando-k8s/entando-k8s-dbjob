@@ -20,6 +20,7 @@ public enum DatabaseDialect {
         public void createUserAndSchema(Statement statement, DatabaseAdminConfig config) throws SQLException {
             statement.execute(format("CREATE USER %s WITH PASSWORD '%s'", config.getDatabaseUser(), config.getDatabasePassword()));
             statement.execute(format("CREATE SCHEMA %s AUTHORIZATION %s", config.getDatabaseUser(), config.getDatabaseUser()));
+            statement.execute(format("ALTER ROLE %s SET search_path =  %s ", config.getDatabaseUser(), config.getDatabaseUser()));
         }
 
         @Override
