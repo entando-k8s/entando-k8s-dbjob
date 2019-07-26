@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+if [ "${DB_VENDOR}" = "oracle" ] ; then
+    pushd ${ENTANDO_COMMON_PATH}/oracle-driver-installer
+    ./install.sh || exit 5
+    popd
+fi
 if [ "${DATABASE_SCHEMA_COMMAND}" = "PREPARE_ENTANDO_SCHEMAS" ] ; then
     $(dirname ${BASH_SOURCE[0]})/create-schema.sh  $PORTDB_USERNAME $PORTDB_PASSWORD || exit 1
     $(dirname ${BASH_SOURCE[0]})/create-schema.sh  $SERVDB_USERNAME $SERVDB_PASSWORD || exit 2

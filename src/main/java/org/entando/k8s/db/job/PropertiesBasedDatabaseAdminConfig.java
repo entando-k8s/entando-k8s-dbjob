@@ -1,7 +1,7 @@
 package org.entando.k8s.db.job;
 
 import java.util.Map;
-
+import java.util.Optional;
 
 
 public class PropertiesBasedDatabaseAdminConfig implements DatabaseAdminConfig{
@@ -53,5 +53,10 @@ public class PropertiesBasedDatabaseAdminConfig implements DatabaseAdminConfig{
     @Override
     public String getDatabaseVendor() {
         return getProperties().get("DATABASE_VENDOR");
+    }
+
+    @Override
+    public Optional<String> getTablespace() {
+        return Optional.ofNullable(getProperties().get("TABLESPACE"));
     }
 }

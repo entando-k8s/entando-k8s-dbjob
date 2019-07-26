@@ -96,6 +96,12 @@
             <scope>compile</scope>
             <version>42.2.6</version>
         </dependency>
+        <!-- Uncomment this dependency for development against Oracle. We are not allowed to pull this dependency into the image-->
+        <!--<dependency>-->
+            <!--<groupId>com.oracle.jdbc</groupId>-->
+            <!--<artifactId>ojdbc8</artifactId>-->
+            <!--<version>18.3.0.0</version>-->
+        <!--</dependency>-->
     </dependencies>
     <profiles>
         <profile>
@@ -221,7 +227,7 @@
                         </permissions>
                     </extraDirectories>
                     <from>
-                        <image>entando/entando-de-app-wildfly:5.2.0-SNAPSHOT</image>
+                        <image>entando/entando-de-app-wildfly:${project.version}</image>
                     </from>
                     <to>
                         <image>entando/${project.artifactId}:${project.version}</image>
@@ -230,13 +236,8 @@
                         <entrypoint>
                             <shell>sh</shell>
                             <option>-c</option>
-                            <arg>exec java ${JAVA_OPTS} -Djava.security.egd=file:/dev/./urandom -cp /app/resources/:/app/classes/:/app/libs/* "org.entando.k8s.db.job.CreateSchemaCommand"  "$@"</arg>
+                            <arg>/process-command.sh</arg>
                         </entrypoint>
-                        <ports>
-                            <port>8081</port>
-                        </ports>
-                        <environment>
-                        </environment>
                         <useCurrentTimestamp>true</useCurrentTimestamp>
                     </container>
                 </configuration>
