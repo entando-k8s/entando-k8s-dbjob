@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-if [ "${DB_VENDOR}" = "oracle" ] ; then
+if [ "${DATABASE_VENDOR}" = "oracle" ] ; then
     pushd ${ENTANDO_COMMON_PATH}/oracle-driver-installer
-    ./install.sh || exit 5
+    env MAVEN_OPTS="-Dmaven.repo.local=/opt/app-root/src/.m2/repository" ./install.sh || exit 5
+    cp /jetty-runner/ojdbc*.jar /app/libs/ -f
     popd
 fi
 if [ "${DATABASE_SCHEMA_COMMAND}" = "PREPARE_ENTANDO_SCHEMAS" ] ; then
