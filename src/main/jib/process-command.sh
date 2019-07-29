@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 if [ "${DATABASE_VENDOR}" = "oracle" ] ; then
     pushd ${ENTANDO_COMMON_PATH}/oracle-driver-installer
+    curl ${ORACLE_MAVEN_REPO:-https://maven.oracle.com}
     env MAVEN_OPTS="-Dmaven.repo.local=/opt/app-root/src/.m2/repository" ./install.sh || exit 5
     cp /jetty-runner/ojdbc*.jar /app/libs/ -f
     popd
@@ -8,7 +9,11 @@ fi
 if [ "${DATABASE_SCHEMA_COMMAND}" = "PREPARE_ENTANDO_SCHEMAS" ] ; then
     $(dirname ${BASH_SOURCE[0]})/create-schema.sh  $PORTDB_USERNAME $PORTDB_PASSWORD || exit 1
     $(dirname ${BASH_SOURCE[0]})/create-schema.sh  $SERVDB_USERNAME $SERVDB_PASSWORD || exit 2
-    export PORTDB_URL="jdbc:${DATABASE_VENDOR}://${DATABASE_SERVER_HOST}:${DATABASE_SERVER_PORT}/${DATABASE_NAME}"
+    if [ "${DATABASE_VENDOR}" = "oracle" ] ; then
+        export PORTDB_URL="jdbc:oracle:thin:@//${DATABASE_SERVER_HOST}:${DATABASE_SERVER_PORT}/${DATABASE_NAME}"
+    else
+        export PORTDB_URL="jdbc:${DATABASE_VENDOR}://${DATABASE_SERVER_HOST}:${DATABASE_SERVER_PORT}/${DATABASE_NAME}"
+    fi
     export SERVDB_URL=${PORTDB_URL}
     ${ENTANDO_COMMON_PATH}/init-db-from-war.sh --war-file=/wildfly/standalone/deployments/entando-de-app.war || exit 3
 else
