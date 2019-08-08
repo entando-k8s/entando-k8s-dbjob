@@ -19,6 +19,7 @@ public class CreateSchemaCommand {
             dialect.createUserAndSchema(st, this.databaseAdminConfig);
         }
     }
+
     public void undo() throws SQLException{
         DatabaseDialect dialect = DatabaseDialect.resolveFor(databaseAdminConfig.getDatabaseVendor());
         try(Connection connection = dialect.connect(this.databaseAdminConfig) ){
@@ -30,5 +31,6 @@ public class CreateSchemaCommand {
     public static void main(String[] args) throws SQLException {
         new CreateSchemaCommand(new PropertiesBasedDatabaseAdminConfig(System.getenv())).execute();
     }
+
 }
 

@@ -1,6 +1,16 @@
 version: '2.1'
 
 services:
+  mysql:
+    image: centos/mysql-57-centos7:latest
+    hostname: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: Password1
+    healthcheck:
+      test: ["CMD", "/bin/bash", "-c", "MYSQL_PWD=Password1 mysql -u root -h 127.0.0.1 -e 'SELECT 1'"]
+      interval: 3s
+      timeout: 10s
+      retries: 30
   postgresql:
     image: centos/postgresql-96-centos7:latest
     hostname: postgresql
@@ -23,7 +33,10 @@ services:
       args:
         MVN_COMMAND: ${MVN_COMMAND}
     environment:
-      DATABASE_SERVER_HOST: postgresql
+      POSTGRESQL_SERVER_HOST: postgresql
+      MYSQL_SERVER_HOST: mysql
     depends_on:
       postgresql:
+        condition: service_healthy
+      mysql:
         condition: service_healthy

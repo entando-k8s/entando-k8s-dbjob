@@ -8,6 +8,32 @@ import java.sql.Statement;
 import static java.lang.String.format;
 
 public enum DatabaseDialect {
+    MYSQL() {
+        @Override
+        public Connection connect(DatabaseAdminConfig config) throws SQLException {
+            String url = format("jdbc:mysql://%s:%s", config.getDatabaseServerHost(), config.getDatabaseServerPort());
+            return DriverManager.getConnection(url, config.getDatabaseAdminUser(), config.getDatabaseAdminPassword());
+        }
+
+        @Override
+
+        public void createUserAndSchema(Statement statement, DatabaseAdminConfig config) throws SQLException {
+            statement.execute(format(
+                    "CREATE DATABASE  %s"
+                    , config.getDatabaseUser()));
+            statement.execute(format(
+                    "GRANT ALL PRIVILEGES  ON %s.*  TO '%s'@'%%' IDENTIFIED BY '%s'  WITH GRANT OPTION;"
+                    , config.getDatabaseUser()
+                    , config.getDatabaseUser()
+                    , config.getDatabasePassword()));
+        }
+
+        @Override
+        public void dropUserAndSchema(Statement st, DatabaseAdminConfig config) {
+            swallow(() -> st.execute(format("DROP DATABASE IF EXISTS %s", config.getDatabaseUser())));
+            swallow(() -> st.execute(format("DROP USER '%s'@'%%'", config.getDatabaseUser())));
+        }
+    },
     POSTGRESQL() {
         @Override
         public Connection connect(DatabaseAdminConfig config) throws SQLException {

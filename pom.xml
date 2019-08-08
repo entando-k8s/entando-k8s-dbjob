@@ -96,6 +96,11 @@
             <scope>compile</scope>
             <version>42.2.6</version>
         </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>5.1.18</version>
+        </dependency>
         <!-- Uncomment this dependency for development against Oracle. We are not allowed to pull this dependency into the image-->
         <!--<dependency>-->
             <!--<groupId>com.oracle.jdbc</groupId>-->
