@@ -7,16 +7,9 @@ if [ "${DATABASE_VENDOR}" = "oracle" ] ; then
     cp /jetty-runner/ojdbc*.jar /app/libs/ -f
     popd
 fi
-if [ "${DATABASE_SCHEMA_COMMAND}" = "PREPARE_ENTANDO_SCHEMAS" ] ; then
-    $(dirname ${BASH_SOURCE[0]})/create-schema.sh  $PORTDB_USERNAME $PORTDB_PASSWORD || exit 1
-    $(dirname ${BASH_SOURCE[0]})/create-schema.sh  $SERVDB_USERNAME $SERVDB_PASSWORD || exit 2
-    if [ "${DATABASE_VENDOR}" = "oracle" ] ; then
-        export PORTDB_URL="jdbc:oracle:thin:@//${DATABASE_SERVER_HOST}:${DATABASE_SERVER_PORT}/${DATABASE_NAME}"
-    else
-        export PORTDB_URL="jdbc:${DATABASE_VENDOR}://${DATABASE_SERVER_HOST}:${DATABASE_SERVER_PORT}/${DATABASE_NAME}"
-    fi
-    export SERVDB_URL=${PORTDB_URL}
-    ${ENTANDO_COMMON_PATH}/init-db-from-war.sh --war-file=/wildfly/standalone/deployments/entando-de-app.war || exit 3
-else
+if [ "${DATABASE_SCHEMA_COMMAND}" = "CREATE_SCHEMA" ] ; then
     $(dirname ${BASH_SOURCE[0]})/create-schema.sh  $DATABASE_USER $DATABASE_PASSWORD || exit 4
+else
+    echo "Uknown DATABASE_SCHEMA_COMMAND: ${DATABASE_SCHEMA_COMMAND}"
+    exit 6
 fi

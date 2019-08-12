@@ -67,7 +67,9 @@ public enum DatabaseDialect {
         public void createUserAndSchema(Statement statement, DatabaseAdminConfig config) throws SQLException {
 //            statement.execute("alter session set \"_ORACLE_SCRIPT\"=true;");
             statement.execute(format("CREATE USER %s IDENTIFIED BY \"%s\"", config.getDatabaseUser(), config.getDatabasePassword()));
-            statement.execute(format("GRANT CREATE PROCEDURE, CREATE PUBLIC SYNONYM, CREATE SEQUENCE, CREATE SESSION, CREATE SYNONYM,CREATE TABLE, CREATE VIEW TO %s",config.getDatabaseUser() ));
+            String sql = format("GRANT CREATE PROCEDURE, CREATE TRIGGER, CREATE PUBLIC SYNONYM, CREATE SEQUENCE, CREATE SESSION, CREATE SYNONYM,CREATE TABLE, CREATE VIEW TO %s", config.getDatabaseUser());
+            System.out.println("executing " + sql);
+            statement.execute(sql);
             statement.execute(format("ALTER USER %s quota unlimited on %s ", config.getDatabaseUser(), config.getTablespace().orElse("USERS")));
         }
 
@@ -75,9 +77,9 @@ public enum DatabaseDialect {
         public void dropUserAndSchema(Statement st, DatabaseAdminConfig config) {
             swallow(() -> st.execute(format("DROP USER %s CASCADE", config.getDatabaseUser())));
         }
-    }
+    };
 
-    ;
+
 
     public static DatabaseDialect resolveFor(String vendorName) {
         return Enum.valueOf(DatabaseDialect.class, vendorName.toUpperCase());

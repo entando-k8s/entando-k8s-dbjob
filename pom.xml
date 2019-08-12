@@ -227,7 +227,7 @@
                         </permissions>
                     </extraDirectories>
                     <from>
-                        <image>entando/entando-de-app-wildfly:${project.version}</image>
+                        <image>entando/entando-alpine-base:${project.version}</image>
                     </from>
                     <to>
                         <image>entando/${project.artifactId}:${project.version}</image>
