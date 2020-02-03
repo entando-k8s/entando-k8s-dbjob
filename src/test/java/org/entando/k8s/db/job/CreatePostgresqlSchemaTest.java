@@ -1,26 +1,23 @@
 package org.entando.k8s.db.job;
 
-import org.junit.jupiter.api.Test;
-import org.postgresql.ds.PGConnectionPoolDataSource;
-import org.postgresql.jdbc2.optional.PoolingDataSource;
-
-import java.io.CharArrayWriter;
-import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.Driver;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
 import static java.util.Optional.ofNullable;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.io.CharArrayWriter;
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
+import org.postgresql.ds.PGConnectionPoolDataSource;
+
 public class CreatePostgresqlSchemaTest {
+
     @Test
-    public void testSimpleCreate() throws Exception{
+    public void testSimpleCreate() throws Exception {
         //Given I have admin rights and connectivity to a database
         Map<String, String> props = getBaseProperties();
         //And I specify a database user and password for which no schema exists yet
@@ -31,7 +28,8 @@ public class CreatePostgresqlSchemaTest {
         //When I perform the CreateSchema command
         cmd.execute();
         //Then the new user will have access to his own schema to create database objects
-        try(Connection connection = DriverManager.getConnection("jdbc:postgresql://"+getDatabaseServerHost()+ ":5432/" + getDatabaseName(),"myschema", "test123")){
+        try (Connection connection = DriverManager
+                .getConnection("jdbc:postgresql://" + getDatabaseServerHost() + ":5432/" + getDatabaseName(), "myschema", "test123")) {
             connection.prepareStatement("CREATE TABLE TEST_TABLE(ID NUMERIC )").execute();
             connection.prepareStatement("TRUNCATE TEST_TABLE").execute();
             connection.prepareStatement("INSERT INTO MYSCHEMA.TEST_TABLE (ID) VALUES (5)").execute();
@@ -39,8 +37,25 @@ public class CreatePostgresqlSchemaTest {
             assertTrue(connection.prepareStatement("SELECT * FROM TEST_TABLE WHERE ID=5").executeQuery().next());
         }
     }
+
+    private void testCreate() throws Exception {
+        //Given I have admin rights and connectivity to a database
+        Map<String, String> props = getBaseProperties();
+        //And I specify a database user and password for which no schema exists yet
+        props.put("DATABASE_USER", "myschema");
+        props.put("DATABASE_PASSWORD", "test123");
+        CreateSchemaCommand cmd = new CreateSchemaCommand(new PropertiesBasedDatabaseAdminConfig(props));
+        cmd.execute();
+        //Then the new user will have access to his own schema to create database objects
+        try (Connection connection = DriverManager
+                .getConnection("jdbc:postgresql://" + getDatabaseServerHost() + ":5432/" + getDatabaseName(), "myschema", "test123")) {
+            //and access them without having to specify the schema as prefix
+            assertTrue(connection.prepareStatement("SELECT 1").executeQuery().next());
+        }
+    }
+
     @Test
-    public void testDatasource() throws Exception{
+    public void testDatasource() throws Exception {
         //Given I have admin rights and connectivity to a database
         Map<String, String> props = getBaseProperties();
         //And I specify a database user and password for which no schema exists yet
@@ -55,7 +70,7 @@ public class CreatePostgresqlSchemaTest {
         ds.setDatabaseName(getDatabaseName());
         ds.setPortNumber(5432);
         //Then the new user will have access to his own schema to create database objects
-        try(Connection connection = ds.getConnection("myschema", "test123")){
+        try (Connection connection = ds.getConnection("myschema", "test123")) {
             connection.prepareStatement("CREATE TABLE TEST_TABLE(ID NUMERIC )").execute();
             connection.prepareStatement("TRUNCATE TEST_TABLE").execute();
             connection.prepareStatement("INSERT INTO MYSCHEMA.TEST_TABLE (ID) VALUES (5)").execute();
@@ -70,7 +85,7 @@ public class CreatePostgresqlSchemaTest {
 
     private Map<String, String> getBaseProperties() {
         //NB! These correspond to the ENV vars in docker-compose-cicd.yml
-        Map<String,String> props =new HashMap<>();
+        Map<String, String> props = new HashMap<>();
         props.put("DATABASE_ADMIN_USER", "postgres");
         props.put("DATABASE_ADMIN_PASSWORD", "postgres");
         props.put("DATABASE_SERVER_HOST", getDatabaseServerHost());
@@ -81,11 +96,17 @@ public class CreatePostgresqlSchemaTest {
     }
 
     private String getDatabaseServerHost() {
-        return ofNullable(System.getenv("POSTGRESQL_SERVER_HOST")).orElse("192.168.0.100");
+        return ofNullable(System.getenv("POSTGRESQL_SERVER_HOST")).orElse("172.17.0.2");
     }
 
     @Test
-    public void testSingleAccess() throws Exception{
+    public void testIdempotent() throws Exception {
+        testCreate();
+        testCreate();
+    }
+
+    @Test
+    public void testSingleAccess() throws Exception {
         //Given I have admin rights and connectivity to a database
         Map<String, String> props = getBaseProperties();
         //And the database has an existing schema
@@ -102,10 +123,11 @@ public class CreatePostgresqlSchemaTest {
         //When I perform the CreateSchema command
         cmd.execute();
         //Then the new user will not have access to create database objects in the existing schema
-        try(Connection connection = DriverManager.getConnection("jdbc:postgresql://"+getDatabaseServerHost()+":5432/"+getDatabaseName(),"myschema", "test123")){
+        try (Connection connection = DriverManager
+                .getConnection("jdbc:postgresql://" + getDatabaseServerHost() + ":5432/" + getDatabaseName(), "myschema", "test123")) {
             connection.prepareStatement("CREATE TABLE EXISTING.TEST_TABLE(ID NUMERIC )").execute();
             fail();
-        }catch(SQLException e){
+        } catch (SQLException e) {
             CharArrayWriter caw = new CharArrayWriter();
             e.printStackTrace(new PrintWriter(caw));
             System.out.println(caw.toString());

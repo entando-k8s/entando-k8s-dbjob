@@ -1,8 +1,10 @@
 package org.entando.k8s.db.job;
 
-import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
-import org.junit.jupiter.api.Test;
+import static java.util.Optional.ofNullable;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
+import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 import java.io.CharArrayWriter;
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -10,14 +12,12 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
-
-import static java.util.Optional.ofNullable;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import org.junit.jupiter.api.Test;
 
 public class CreateMysqlSchemaTest {
+
     @Test
-    public void testSimpleCreate() throws Exception{
+    public void testSimpleCreate() throws Exception {
         //Given I have admin rights and connectivity to a database
         Map<String, String> props = getBaseProperties();
         //And I specify a database user and password for which no schema exists yet
@@ -28,7 +28,8 @@ public class CreateMysqlSchemaTest {
         //When I perform the CreateSchema command
         cmd.execute();
         //Then the new user will have access to his own schema to create database objects
-        try(Connection connection = DriverManager.getConnection("jdbc:mysql://"+getDatabaseServerHost()+ ":3306/myschema","myschema", "test123")){
+        try (Connection connection = DriverManager
+                .getConnection("jdbc:mysql://" + getDatabaseServerHost() + ":3306/myschema", "myschema", "test123")) {
             connection.prepareStatement("CREATE TABLE TEST_TABLE(ID NUMERIC )").execute();
             connection.prepareStatement("TRUNCATE TEST_TABLE").execute();
             connection.prepareStatement("INSERT INTO myschema.TEST_TABLE (ID) VALUES (5)").execute();
@@ -36,8 +37,31 @@ public class CreateMysqlSchemaTest {
             assertTrue(connection.prepareStatement("SELECT * FROM TEST_TABLE WHERE ID=5").executeQuery().next());
         }
     }
+
+    void testCreate() throws Exception {
+        //Given I have admin rights and connectivity to a database
+        Map<String, String> props = getBaseProperties();
+        //And I specify a database user and password for which no schema exists yet
+        props.put("DATABASE_USER", "myschema");
+        props.put("DATABASE_PASSWORD", "test123");
+        CreateSchemaCommand cmd = new CreateSchemaCommand(new PropertiesBasedDatabaseAdminConfig(props));
+        //When I perform the CreateSchema command
+        cmd.execute();
+        //Then the new user will have access to his own schema to create database objects
+        try (Connection connection = DriverManager
+                .getConnection("jdbc:mysql://" + getDatabaseServerHost() + ":3306/myschema", "myschema", "test123")) {
+            assertTrue(connection.prepareStatement("SELECT 1 FROM  DUAL").executeQuery().next());
+        }
+    }
+
     @Test
-    public void testDatasource() throws Exception{
+    public void testIdempotent() throws Exception {
+        testCreate();
+        testCreate();
+    }
+
+    @Test
+    public void testDatasource() throws Exception {
         //Given I have admin rights and connectivity to a database
         Map<String, String> props = getBaseProperties();
         //And I specify a database user and password for which no schema exists yet
@@ -49,10 +73,10 @@ public class CreateMysqlSchemaTest {
         cmd.execute();
         MysqlDataSource ds = new MysqlDataSource();
         ds.setServerName(getDatabaseServerHost());
-        ds. setDatabaseName("myschema");
+        ds.setDatabaseName("myschema");
         ds.setPortNumber(3306);
         //Then the new user will have access to his own schema to create database objects
-        try(Connection connection = ds.getConnection("myschema", "test123")){
+        try (Connection connection = ds.getConnection("myschema", "test123")) {
             connection.prepareStatement("CREATE TABLE TEST_TABLE(ID NUMERIC )").execute();
             connection.prepareStatement("TRUNCATE TEST_TABLE").execute();
             connection.prepareStatement("INSERT INTO myschema.TEST_TABLE (ID) VALUES (5)").execute();
@@ -63,7 +87,7 @@ public class CreateMysqlSchemaTest {
 
     private Map<String, String> getBaseProperties() {
         //NB! These correspond to the ENV vars in docker-compose-cicd.yml
-        Map<String,String> props =new HashMap<>();
+        Map<String, String> props = new HashMap<>();
         props.put("DATABASE_ADMIN_USER", "root");
         props.put("DATABASE_ADMIN_PASSWORD", "Password1");
         props.put("DATABASE_SERVER_HOST", getDatabaseServerHost());
@@ -73,11 +97,11 @@ public class CreateMysqlSchemaTest {
     }
 
     private String getDatabaseServerHost() {
-        return ofNullable(System.getenv("MYSQL_SERVER_HOST")).orElse("10.0.0.100");
+        return ofNullable(System.getenv("MYSQL_SERVER_HOST")).orElse("172.17.0.2");
     }
 
     @Test
-    public void testSingleAccess() throws Exception{
+    public void testSingleAccess() throws Exception {
         //Given I have admin rights and connectivity to a database
         Map<String, String> props = getBaseProperties();
         //And the database has an existing schema
@@ -94,10 +118,11 @@ public class CreateMysqlSchemaTest {
         //When I perform the CreateSchema command
         cmd.execute();
         //Then the new user will not have access to create database objects in the existing schema
-        try(Connection connection = DriverManager.getConnection("jdbc:mysql://"+getDatabaseServerHost()+":3306/myschema","myschema", "test123")){
+        try (Connection connection = DriverManager
+                .getConnection("jdbc:mysql://" + getDatabaseServerHost() + ":3306/myschema", "myschema", "test123")) {
             connection.prepareStatement("CREATE TABLE existing.TEST_TABLE(ID NUMERIC )").execute();
             fail();
-        }catch(SQLException e){
+        } catch (SQLException e) {
             CharArrayWriter caw = new CharArrayWriter();
             e.printStackTrace(new PrintWriter(caw));
             System.out.println(caw.toString());

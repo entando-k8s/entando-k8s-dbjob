@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class CreateSchemaCommand {
+
     private DatabaseAdminConfig databaseAdminConfig;
 
     public CreateSchemaCommand(DatabaseAdminConfig databaseAdminConfig) {
@@ -13,18 +14,21 @@ public class CreateSchemaCommand {
     }
 
     public void execute() throws SQLException {
+
         DatabaseDialect dialect = DatabaseDialect.resolveFor(databaseAdminConfig.getDatabaseVendor());
-        try(Connection connection = dialect.connect(this.databaseAdminConfig) ){
-            Statement st = connection.createStatement();
-            dialect.createUserAndSchema(st, this.databaseAdminConfig);
+        if (!dialect.schemaExists(databaseAdminConfig)) {
+            try (Connection connection = dialect.connect(this.databaseAdminConfig)) {
+                Statement st = connection.createStatement();
+                dialect.createUserAndSchema(st, this.databaseAdminConfig);
+            }
         }
     }
 
-    public void undo() throws SQLException{
+    public void undo() throws SQLException {
         DatabaseDialect dialect = DatabaseDialect.resolveFor(databaseAdminConfig.getDatabaseVendor());
-        try(Connection connection = dialect.connect(this.databaseAdminConfig) ){
+        try (Connection connection = dialect.connect(this.databaseAdminConfig)) {
             Statement st = connection.createStatement();
-            dialect.dropUserAndSchema(st,this.databaseAdminConfig);
+            dialect.dropUserAndSchema(st, this.databaseAdminConfig);
         }
     }
 
