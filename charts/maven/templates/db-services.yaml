@@ -1,0 +1,72 @@
+---
+kind: "Service"
+apiVersion: "v1"
+metadata:
+  name: "postgresql-service"
+spec:
+  ports:
+    - name: "postgresql"
+      protocol: "TCP"
+      port: 5432
+      targetPort: 5432
+      nodePort: 0
+selector: {}
+---
+kind: "Endpoints"
+apiVersion: "v1"
+metadata:
+  name: "postgresql-service"
+subsets:
+  - addresses:
+      - ip: "172.30.7.132"
+    ports:
+      - port: 5432
+        name: "postgresql"
+---
+kind: "Service"
+apiVersion: "v1"
+metadata:
+  name: "mysql-service"
+spec:
+  ports:
+    - name: "mysql"
+      protocol: "TCP"
+      port: 3306
+      targetPort: 3306
+      nodePort: 0
+selector: {}
+---
+kind: "Endpoints"
+apiVersion: "v1"
+metadata:
+  name: "mysql-service"
+subsets:
+  - addresses:
+      - ip: "172.30.71.59"
+    ports:
+      - port: 3306
+        name: "mysql"
+---
+kind: "Service"
+apiVersion: "v1"
+metadata:
+  name: "oracle-service"
+spec:
+  ports:
+    - name: "oracle"
+      protocol: "TCP"
+      port: 1521
+      targetPort: 1521
+      nodePort: 0
+selector: {}
+---
+kind: "Endpoints"
+apiVersion: "v1"
+metadata:
+  name: "oracle-service"
+subsets:
+  - addresses:
+      - ip: "172.30.12.235"
+    ports:
+      - port: 1521
+        name: "oracle"

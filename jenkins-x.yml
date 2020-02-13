@@ -8,11 +8,11 @@ pipelineConfig:
     - name: _JAVA_OPTIONS
       value: -XX:+UnlockExperimentalVMOptions -Dsun.zip.disableMemoryMapping=true -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx512m
     - name: MYSQL_SERVER_HOST
-      value: 172.30.71.59
+      value: mysql-service.svc.cluster.local
     - name: POSTGRESQL_SERVER_HOST
-      value: 172.30.7.132
+      value: postgresql-service.svc.cluster.local
     - name: ORACLE_SERVER_HOST
-      value: 172.30.12.235
+      value: oracle-service.svc.cluster.local
   pipelines:
     pullRequest:
       build:
