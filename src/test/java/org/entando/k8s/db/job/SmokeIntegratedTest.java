@@ -36,7 +36,7 @@ public class SmokeIntegratedTest {
     KubernetesClient client = new DefaultKubernetesClient();
 
     @BeforeEach
-    public void cleanNamespace(){
+    public void cleanNamespace() {
         if (client.namespaces().withName(NAMESPACE) == null) {
             client.namespaces().withName(NAMESPACE).createNew().done();
         } else {
@@ -45,6 +45,7 @@ public class SmokeIntegratedTest {
         }
 
     }
+
     @Test
     public void testPostgresql() throws SQLException {
         //Given I have a PG Database available on a given IP address
