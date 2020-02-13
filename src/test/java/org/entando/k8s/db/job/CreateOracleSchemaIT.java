@@ -24,7 +24,7 @@ public class CreateOracleSchemaIT {
         Map<String, String> props = getBaseProperties();
         //And I specify a database user and password for which no schema exists yet
         props.put("DATABASE_USER", "myschema");
-        props.put("DATABASE_PASSWORD", "tes123");
+        props.put("DATABASE_PASSWORD", "test123");
         //And the schema/user combination does not yet exist
         CreateSchemaCommand cmd = new CreateSchemaCommand(new PropertiesBasedDatabaseAdminConfig(props));
         cmd.undo();
@@ -43,16 +43,19 @@ public class CreateOracleSchemaIT {
 
     @Test
     public void testIdempotent() throws Exception {
-        //Given I have already created a schema
-        testCreate();
-        //Expect creating it a second time to succeed without breaking
-        testCreate();
-    }
-
-    private void testCreate() throws SQLException {
         Map<String, String> props = getBaseProperties();
         props.put("DATABASE_USER", "myschema");
         props.put("DATABASE_PASSWORD", "test123");
+        new CreateSchemaCommand(new PropertiesBasedDatabaseAdminConfig(props)).undo();
+        //Given I have already created a schema
+        testCreate(props);
+        //Expect creating it a second time to succeed without breaking
+        testCreate(props);
+    }
+
+    private void testCreate(Map<String, String> props) throws SQLException {
+        CreateSchemaCommand cmd = new CreateSchemaCommand(new PropertiesBasedDatabaseAdminConfig(props));
+        cmd.execute();
         try (Connection connection = DriverManager
                 .getConnection("jdbc:oracle:thin:@//" + getDatabaseServerHost() + ":1521/" + getDatabaseName(), "myschema", "test123")) {
             assertTrue(connection.prepareStatement("SELECT 2 FROM DUAL").executeQuery().next());
