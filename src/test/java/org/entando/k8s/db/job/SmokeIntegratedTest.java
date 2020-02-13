@@ -32,13 +32,13 @@ public class SmokeIntegratedTest {
     public static final String DATABASE_NAME = "testdb";
     public static final String MYSCHEMA = "myschema";
     public static final String MYPASSWORD = "mypassword";
-    private static String NAMESPACE = EntandoOperatorTestConfig.calculateNameSpace("dbjob-ns");
+    private static final String NAMESPACE = EntandoOperatorTestConfig.calculateNameSpace("dbjob-ns");
     KubernetesClient client = new DefaultKubernetesClient();
 
     @BeforeEach
     public void cleanNamespace() {
-        if (client.namespaces().withName(NAMESPACE) == null) {
-            client.namespaces().withName(NAMESPACE).createNew().done();
+        if (client.namespaces().withName(NAMESPACE).get() == null) {
+            client.namespaces().createNew().withNewMetadata().withName(NAMESPACE).endMetadata().done();
         } else {
             client.pods().inNamespace(NAMESPACE).delete();
             await().atMost(2, TimeUnit.MINUTES).until(() -> client.pods().inNamespace(NAMESPACE).list().getItems().isEmpty());

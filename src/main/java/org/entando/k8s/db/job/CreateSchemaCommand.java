@@ -11,7 +11,7 @@ import javax.inject.Inject;
 
 public class CreateSchemaCommand {
 
-    private static final Logger logger = Logger.getLogger(CreateSchemaCommand.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(CreateSchemaCommand.class.getName());
     private DatabaseAdminConfig databaseAdminConfig;
     private int status = 0;
 
@@ -20,16 +20,15 @@ public class CreateSchemaCommand {
         this.databaseAdminConfig = databaseAdminConfig;
     }
 
-    public void onStart(@Observes StartupEvent startupEvent) {
+    public void onStartup(@Observes StartupEvent startupEvent) {
+        LOGGER.entering(CreateSchemaCommand.class.getName(), "onStartup");
         try {
             execute();
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Schema creation failed.", e);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Schema creation failed.", e);
             status = -1;
         } finally {
-            new Thread(() -> {
-                System.exit(status);
-            }).start();
+            new Thread(() -> System.exit(status)).start();
         }
     }
 
