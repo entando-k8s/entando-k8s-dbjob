@@ -1,0 +1,43 @@
+buildPack: maven-java11
+pipelineConfig:
+  agent:
+    image: entando-jx-maven-java11
+  env:
+    - name: PIPELINE_CODE
+      value: dj
+    - name: _JAVA_OPTIONS
+      value: -XX:+UnlockExperimentalVMOptions -Dsun.zip.disableMemoryMapping=true -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx512m
+    - name: MYSQL_SERVER_HOST
+      value: 172.30.71.59
+    - name: POSTGRESQL_SERVER_HOST
+      value: 172.30.7.132
+    - name: ORACLE_SERVER_HOST
+      value: 172.30.12.235
+  pipelines:
+    pullRequest:
+      build:
+        replace: true
+        steps:
+          - sh: mvn versions:set -DnewVersion=$PREVIEW_VERSION
+            name: set-version
+          - sh: fix-git-branches
+            name: fix-git-for-sonar
+          - sh: mvn-verify-pr
+            name: mvn-verify-pr
+      postBuild:
+        replace: true
+        steps: []
+      promote:
+        replace: true
+        steps: []
+    release:
+      build:
+        replace: true
+        steps:
+          - sh: fetch-history-by-days 30
+            name: fetch-history-for-sonar
+          - sh: mvn-deploy-release
+            name: mvn-deploy-release
+      promote:
+        replace: true
+        steps: []

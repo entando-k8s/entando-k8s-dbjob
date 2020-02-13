@@ -3,15 +3,15 @@ package org.entando.k8s.db.job;
 import java.util.Map;
 import java.util.Optional;
 
+public class PropertiesBasedDatabaseAdminConfig implements DatabaseAdminConfig {
 
-public class PropertiesBasedDatabaseAdminConfig implements DatabaseAdminConfig{
     private final Map<String, String> properties;
 
     public PropertiesBasedDatabaseAdminConfig(Map<String, String> properties) {
         this.properties = properties;
     }
 
-    protected Map<String,String> getProperties(){
+    protected Map<String, String> getProperties() {
         return properties;
     }
 

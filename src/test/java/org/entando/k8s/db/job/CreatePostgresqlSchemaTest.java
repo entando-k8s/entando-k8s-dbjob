@@ -38,18 +38,11 @@ public class CreatePostgresqlSchemaTest {
         }
     }
 
-    private void testCreate() throws Exception {
-        //Given I have admin rights and connectivity to a database
-        Map<String, String> props = getBaseProperties();
-        //And I specify a database user and password for which no schema exists yet
-        props.put("DATABASE_USER", "myschema");
-        props.put("DATABASE_PASSWORD", "test123");
+    private void testCreate(Map<String, String> props) throws SQLException {
         CreateSchemaCommand cmd = new CreateSchemaCommand(new PropertiesBasedDatabaseAdminConfig(props));
         cmd.execute();
-        //Then the new user will have access to his own schema to create database objects
         try (Connection connection = DriverManager
                 .getConnection("jdbc:postgresql://" + getDatabaseServerHost() + ":5432/" + getDatabaseName(), "myschema", "test123")) {
-            //and access them without having to specify the schema as prefix
             assertTrue(connection.prepareStatement("SELECT 1").executeQuery().next());
         }
     }
@@ -80,7 +73,7 @@ public class CreatePostgresqlSchemaTest {
     }
 
     private String getDatabaseName() {
-        return "testdb";
+        return "sampledb";
     }
 
     private Map<String, String> getBaseProperties() {
@@ -96,13 +89,21 @@ public class CreatePostgresqlSchemaTest {
     }
 
     private String getDatabaseServerHost() {
-        return ofNullable(System.getenv("POSTGRESQL_SERVER_HOST")).orElse("172.17.0.2");
+        return ofNullable(System.getenv("POSTGRESQL_SERVER_HOST")).orElse("localhost");
     }
 
     @Test
     public void testIdempotent() throws Exception {
-        testCreate();
-        testCreate();
+        //Given a user/schema combination that does not exist
+        Map<String, String> props = getBaseProperties();
+        props.put("DATABASE_USER", "myschema");
+        props.put("DATABASE_PASSWORD", "test123");
+        CreateSchemaCommand cmd = new CreateSchemaCommand(new PropertiesBasedDatabaseAdminConfig(props));
+        cmd.undo();
+        //But is then created
+        testCreate(props);
+        //Expect a second attempt to create it not to fail, even though it already exists
+        testCreate(props);
     }
 
     @Test

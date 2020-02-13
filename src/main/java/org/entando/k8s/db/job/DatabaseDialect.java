@@ -31,13 +31,10 @@ public enum DatabaseDialect {
 
         public void createUserAndSchema(Statement statement, DatabaseAdminConfig config) throws SQLException {
             statement.execute(format(
-                    "CREATE DATABASE  %s"
-                    , config.getDatabaseUser()));
+                    "CREATE DATABASE  %s", config.getDatabaseUser()));
             statement.execute(format(
-                    "GRANT ALL PRIVILEGES  ON %s.*  TO '%s'@'%%' IDENTIFIED BY '%s'  WITH GRANT OPTION;"
-                    , config.getDatabaseUser()
-                    , config.getDatabaseUser()
-                    , config.getDatabasePassword()));
+                    "GRANT ALL PRIVILEGES  ON %s.*  TO '%s'@'%%' IDENTIFIED BY '%s'  WITH GRANT OPTION;", config.getDatabaseUser(),
+                    config.getDatabaseUser(), config.getDatabasePassword()));
         }
 
         @Override
@@ -125,14 +122,6 @@ public enum DatabaseDialect {
         return Enum.valueOf(DatabaseDialect.class, vendorName.toUpperCase());
     }
 
-    public abstract Connection connect(DatabaseAdminConfig config) throws SQLException;
-
-    public abstract boolean schemaExists(DatabaseAdminConfig config) throws SQLException;
-
-    public abstract void createUserAndSchema(Statement statement, DatabaseAdminConfig config) throws SQLException;
-
-    public abstract void dropUserAndSchema(Statement st, DatabaseAdminConfig config);
-
     private static void swallow(SqlAction action) {
         try {
             action.execute();
@@ -140,6 +129,14 @@ public enum DatabaseDialect {
             System.out.println(e);
         }
     }
+
+    public abstract Connection connect(DatabaseAdminConfig config) throws SQLException;
+
+    public abstract boolean schemaExists(DatabaseAdminConfig config) throws SQLException;
+
+    public abstract void createUserAndSchema(Statement statement, DatabaseAdminConfig config) throws SQLException;
+
+    public abstract void dropUserAndSchema(Statement st, DatabaseAdminConfig config);
 
     private interface SqlAction {
 

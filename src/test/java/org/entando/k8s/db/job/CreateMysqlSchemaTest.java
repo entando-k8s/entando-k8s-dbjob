@@ -23,6 +23,7 @@ public class CreateMysqlSchemaTest {
         //And I specify a database user and password for which no schema exists yet
         props.put("DATABASE_USER", "myschema");
         props.put("DATABASE_PASSWORD", "test123");
+        //And the given user/schema combination does not exist
         CreateSchemaCommand cmd = new CreateSchemaCommand(new PropertiesBasedDatabaseAdminConfig(props));
         cmd.undo();
         //When I perform the CreateSchema command
@@ -38,26 +39,27 @@ public class CreateMysqlSchemaTest {
         }
     }
 
-    void testCreate() throws Exception {
-        //Given I have admin rights and connectivity to a database
+    @Test
+    public void testIdempotent() throws Exception {
+        //Give that a specific user/schema combination does not exist
         Map<String, String> props = getBaseProperties();
-        //And I specify a database user and password for which no schema exists yet
         props.put("DATABASE_USER", "myschema");
         props.put("DATABASE_PASSWORD", "test123");
         CreateSchemaCommand cmd = new CreateSchemaCommand(new PropertiesBasedDatabaseAdminConfig(props));
-        //When I perform the CreateSchema command
+        cmd.undo();
+        //But then it is created
+        testCreate(props);
+        //Expected a second attempt not to fail, even though it doesn't change
+        testCreate(props);
+    }
+
+    private void testCreate(Map<String, String> props) throws Exception {
+        CreateSchemaCommand cmd = new CreateSchemaCommand(new PropertiesBasedDatabaseAdminConfig(props));
         cmd.execute();
-        //Then the new user will have access to his own schema to create database objects
         try (Connection connection = DriverManager
                 .getConnection("jdbc:mysql://" + getDatabaseServerHost() + ":3306/myschema", "myschema", "test123")) {
             assertTrue(connection.prepareStatement("SELECT 1 FROM  DUAL").executeQuery().next());
         }
-    }
-
-    @Test
-    public void testIdempotent() throws Exception {
-        testCreate();
-        testCreate();
     }
 
     @Test
@@ -97,7 +99,7 @@ public class CreateMysqlSchemaTest {
     }
 
     private String getDatabaseServerHost() {
-        return ofNullable(System.getenv("MYSQL_SERVER_HOST")).orElse("172.17.0.2");
+        return ofNullable(System.getenv("MYSQL_SERVER_HOST")).orElse("localhost");
     }
 
     @Test

@@ -13,6 +13,10 @@ public class CreateSchemaCommand {
         this.databaseAdminConfig = databaseAdminConfig;
     }
 
+    public static void main(String[] args) throws SQLException {
+        new CreateSchemaCommand(new PropertiesBasedDatabaseAdminConfig(System.getenv())).execute();
+    }
+
     public void execute() throws SQLException {
 
         DatabaseDialect dialect = DatabaseDialect.resolveFor(databaseAdminConfig.getDatabaseVendor());
@@ -30,10 +34,6 @@ public class CreateSchemaCommand {
             Statement st = connection.createStatement();
             dialect.dropUserAndSchema(st, this.databaseAdminConfig);
         }
-    }
-
-    public static void main(String[] args) throws SQLException {
-        new CreateSchemaCommand(new PropertiesBasedDatabaseAdminConfig(System.getenv())).execute();
     }
 
 }
