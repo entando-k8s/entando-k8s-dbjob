@@ -12,8 +12,11 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
+@Tags(@Tag("inter-process"))
 public class CreateMysqlSchemaTest {
 
     @Test

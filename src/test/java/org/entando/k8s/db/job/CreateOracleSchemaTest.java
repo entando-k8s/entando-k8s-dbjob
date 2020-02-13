@@ -11,11 +11,11 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
-/**
- * Not executed because it requires a dedicated Oracle instance.
- */
+@Tags(@Tag("inter-process"))
 public class CreateOracleSchemaTest {
 
     @Test
