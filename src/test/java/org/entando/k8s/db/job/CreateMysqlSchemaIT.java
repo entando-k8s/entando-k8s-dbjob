@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
 @Tags(@Tag("inter-process"))
-public class CreateMysqlSchemaTest {
+public class CreateMysqlSchemaIT {
 
     @Test
     public void testSimpleCreate() throws Exception {

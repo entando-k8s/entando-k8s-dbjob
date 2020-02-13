@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
 @Tags(@Tag("inter-process"))
-public class CreateOracleSchemaTest {
+public class CreateOracleSchemaIT {
 
     @Test
     public void simpleCreate() throws Exception {

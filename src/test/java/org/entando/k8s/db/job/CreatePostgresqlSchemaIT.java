@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.postgresql.ds.PGConnectionPoolDataSource;
 
 @Tags(@Tag("inter-process"))
-public class CreatePostgresqlSchemaTest {
+public class CreatePostgresqlSchemaIT {
 
     @Test
     public void testSimpleCreate() throws Exception {
