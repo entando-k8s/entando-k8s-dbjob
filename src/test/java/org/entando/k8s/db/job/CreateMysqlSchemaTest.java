@@ -4,7 +4,7 @@ import static java.util.Optional.ofNullable;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
+import com.mysql.cj.jdbc.MysqlDataSource;
 import java.io.CharArrayWriter;
 import java.io.PrintWriter;
 import java.sql.Connection;
