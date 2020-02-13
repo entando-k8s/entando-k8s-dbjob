@@ -49,6 +49,7 @@
         <github.organization>entando-k8s</github.organization>
         <sonar.projectKey>${github.organization}_${project.artifactId}</sonar.projectKey>
         <sonar.junit.reportPaths>target/surefire-reports</sonar.junit.reportPaths>
+        <entando.k8s.operator.common.version>6.0.101</entando.k8s.operator.common.version>
     </properties>
     <issueManagement>
         <system>Github</system>
@@ -80,6 +81,30 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-kubernetes-client</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>entando-k8s-operator-common</artifactId>
+            <version>${entando.k8s.operator.common.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>entando-k8s-operator-common</artifactId>
+            <version>${entando.k8s.operator.common.version}</version>
+            <scope>test</scope>
+            <type>test-jar</type>
+            <classifier>tests</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
     <profiles>

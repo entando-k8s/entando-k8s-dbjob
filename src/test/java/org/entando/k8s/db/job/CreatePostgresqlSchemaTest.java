@@ -4,7 +4,6 @@ import static java.util.Optional.ofNullable;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import com.mysql.cj.jdbc.MysqlDataSource;
 import java.io.CharArrayWriter;
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -15,9 +14,10 @@ import java.util.Map;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
+import org.postgresql.ds.PGConnectionPoolDataSource;
 
-@Tags(@Tag("inter-process"))
-public class CreateMysqlSchemaIT {
+@Tags(@Tag("in-process"))
+public class CreatePostgresqlSchemaTest {
 
     @Test
     public void testSimpleCreate() throws Exception {
@@ -26,42 +26,27 @@ public class CreateMysqlSchemaIT {
         //And I specify a database user and password for which no schema exists yet
         props.put("DATABASE_USER", "myschema");
         props.put("DATABASE_PASSWORD", "test123");
-        //And the given user/schema combination does not exist
         CreateSchemaCommand cmd = new CreateSchemaCommand(new PropertiesBasedDatabaseAdminConfig(props));
         cmd.undo();
         //When I perform the CreateSchema command
         cmd.execute();
         //Then the new user will have access to his own schema to create database objects
         try (Connection connection = DriverManager
-                .getConnection("jdbc:mysql://" + getDatabaseServerHost() + ":3306/myschema", "myschema", "test123")) {
+                .getConnection("jdbc:postgresql://" + getDatabaseServerHost() + ":5432/" + getDatabaseName(), "myschema", "test123")) {
             connection.prepareStatement("CREATE TABLE TEST_TABLE(ID NUMERIC )").execute();
             connection.prepareStatement("TRUNCATE TEST_TABLE").execute();
-            connection.prepareStatement("INSERT INTO myschema.TEST_TABLE (ID) VALUES (5)").execute();
+            connection.prepareStatement("INSERT INTO MYSCHEMA.TEST_TABLE (ID) VALUES (5)").execute();
             //and access them without having to specify the schema as prefix
             assertTrue(connection.prepareStatement("SELECT * FROM TEST_TABLE WHERE ID=5").executeQuery().next());
         }
     }
 
-    @Test
-    public void testIdempotent() throws Exception {
-        //Give that a specific user/schema combination does not exist
-        Map<String, String> props = getBaseProperties();
-        props.put("DATABASE_USER", "myschema");
-        props.put("DATABASE_PASSWORD", "test123");
-        CreateSchemaCommand cmd = new CreateSchemaCommand(new PropertiesBasedDatabaseAdminConfig(props));
-        cmd.undo();
-        //But then it is created
-        testCreate(props);
-        //Expected a second attempt not to fail, even though it doesn't change
-        testCreate(props);
-    }
-
-    private void testCreate(Map<String, String> props) throws Exception {
+    private void testCreate(Map<String, String> props) throws SQLException {
         CreateSchemaCommand cmd = new CreateSchemaCommand(new PropertiesBasedDatabaseAdminConfig(props));
         cmd.execute();
         try (Connection connection = DriverManager
-                .getConnection("jdbc:mysql://" + getDatabaseServerHost() + ":3306/myschema", "myschema", "test123")) {
-            assertTrue(connection.prepareStatement("SELECT 1 FROM  DUAL").executeQuery().next());
+                .getConnection("jdbc:postgresql://" + getDatabaseServerHost() + ":5432/" + getDatabaseName(), "myschema", "test123")) {
+            assertTrue(connection.prepareStatement("SELECT 1").executeQuery().next());
         }
     }
 
@@ -76,33 +61,52 @@ public class CreateMysqlSchemaIT {
         cmd.undo();
         //When I perform the CreateSchema command
         cmd.execute();
-        MysqlDataSource ds = new MysqlDataSource();
+        PGConnectionPoolDataSource ds = new PGConnectionPoolDataSource();
         ds.setServerName(getDatabaseServerHost());
-        ds.setDatabaseName("myschema");
-        ds.setPortNumber(3306);
+        ds.setDatabaseName(getDatabaseName());
+        ds.setPortNumber(5432);
         //Then the new user will have access to his own schema to create database objects
         try (Connection connection = ds.getConnection("myschema", "test123")) {
             connection.prepareStatement("CREATE TABLE TEST_TABLE(ID NUMERIC )").execute();
             connection.prepareStatement("TRUNCATE TEST_TABLE").execute();
-            connection.prepareStatement("INSERT INTO myschema.TEST_TABLE (ID) VALUES (5)").execute();
+            connection.prepareStatement("INSERT INTO MYSCHEMA.TEST_TABLE (ID) VALUES (5)").execute();
             //and access them without having to specify the schema as prefix
             assertTrue(connection.prepareStatement("SELECT * FROM TEST_TABLE WHERE ID=5").executeQuery().next());
         }
     }
 
+    private String getDatabaseName() {
+        return "sampledb";
+    }
+
     private Map<String, String> getBaseProperties() {
         //NB! These correspond to the ENV vars in docker-compose-cicd.yml
         Map<String, String> props = new HashMap<>();
-        props.put("DATABASE_ADMIN_USER", "root");
-        props.put("DATABASE_ADMIN_PASSWORD", "Password1");
+        props.put("DATABASE_ADMIN_USER", "postgres");
+        props.put("DATABASE_ADMIN_PASSWORD", "postgres");
         props.put("DATABASE_SERVER_HOST", getDatabaseServerHost());
-        props.put("DATABASE_SERVER_PORT", "3306");
-        props.put("DATABASE_VENDOR", "mysql");
+        props.put("DATABASE_SERVER_PORT", "5432");
+        props.put("DATABASE_VENDOR", "postgresql");
+        props.put("DATABASE_NAME", getDatabaseName());
         return props;
     }
 
     private String getDatabaseServerHost() {
-        return ofNullable(System.getenv("EXTERNAL_MYSQL_SERVICE_HOST")).orElse("localhost");
+        return ofNullable(System.getenv("EXTERNAL_POSTGRESQL_SERVICE_HOST")).orElse("localhost");
+    }
+
+    @Test
+    public void testIdempotent() throws Exception {
+        //Given a user/schema combination that does not exist
+        Map<String, String> props = getBaseProperties();
+        props.put("DATABASE_USER", "myschema");
+        props.put("DATABASE_PASSWORD", "test123");
+        CreateSchemaCommand cmd = new CreateSchemaCommand(new PropertiesBasedDatabaseAdminConfig(props));
+        cmd.undo();
+        //But is then created
+        testCreate(props);
+        //Expect a second attempt to create it not to fail, even though it already exists
+        testCreate(props);
     }
 
     @Test
@@ -124,14 +128,14 @@ public class CreateMysqlSchemaIT {
         cmd.execute();
         //Then the new user will not have access to create database objects in the existing schema
         try (Connection connection = DriverManager
-                .getConnection("jdbc:mysql://" + getDatabaseServerHost() + ":3306/myschema", "myschema", "test123")) {
-            connection.prepareStatement("CREATE TABLE existing.TEST_TABLE(ID NUMERIC )").execute();
+                .getConnection("jdbc:postgresql://" + getDatabaseServerHost() + ":5432/" + getDatabaseName(), "myschema", "test123")) {
+            connection.prepareStatement("CREATE TABLE EXISTING.TEST_TABLE(ID NUMERIC )").execute();
             fail();
         } catch (SQLException e) {
             CharArrayWriter caw = new CharArrayWriter();
             e.printStackTrace(new PrintWriter(caw));
             System.out.println(caw.toString());
-            assertTrue(caw.toString().toLowerCase().contains("command denied"));
+            assertTrue(caw.toString().toLowerCase().contains("permission denied"));
         }
     }
 

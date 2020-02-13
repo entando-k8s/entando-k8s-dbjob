@@ -6,7 +6,7 @@ pipelineConfig:
     - name: PIPELINE_CODE
       value: dj
     - name: _JAVA_OPTIONS
-      value: -XX:+UnlockExperimentalVMOptions -Dsun.zip.disableMemoryMapping=true -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Xms10m -Xmx512m
+      value: -XX:+UnlockExperimentalVMOptions -Dsun.zip.disableMemoryMapping=true -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Xms1000m -Xmx12000m
   pipelines:
     pullRequest:
       build:
@@ -16,11 +16,12 @@ pipelineConfig:
             name: set-version
           - sh: fix-git-branches
             name: fix-git-for-sonar
-          - sh: mvn-verify-pr -Pinter-process-verification
+          - sh: mvn-verify-pr -P${EXECUTABLE_TYPE}
             name: mvn-verify-pr
-      postBuild:
-        replace: true
-        steps: []
+          - sh:  echo "This avoids unwanted kaniko command substitution" &&  skaffold build -p ${EXECUTABLE_TYPE} -f skaffold.yaml
+            name: container-build
+          - sh: run-inter-process-tests
+            name: run-inter-process-tests
       promote:
         replace: true
         steps: []
@@ -30,8 +31,18 @@ pipelineConfig:
         steps:
           - sh: fetch-history-by-days 30
             name: fetch-history-for-sonar
-          - sh: mvn-deploy-release  -Pinter-process-verification
+          - sh: mvn-deploy-release -P${EXECUTABLE_TYPE}
             name: mvn-deploy-release
+          - sh: echo "This avoids unwanted kaniko command substitution"  &&  skaffold build -p ${EXECUTABLE_TYPE} -f skaffold.yaml
+            name: container-build
+          - sh: jx step post build --image $DOCKER_REGISTRY/$ORG/$APP_NAME:\$(cat VERSION)
+            name: post-build
+          - sh: run-inter-process-tests
+            name: run-inter-process-tests
       promote:
         replace: true
-        steps: []
+        steps:
+          - sh: jx step changelog --version v\$(cat ../../VERSION)
+            name: changelog
+          - sh: publish-image-info
+            name: update-image-map

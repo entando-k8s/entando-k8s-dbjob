@@ -15,8 +15,8 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
-@Tags(@Tag("inter-process"))
-public class CreateOracleSchemaIT {
+@Tags(@Tag("in-process"))
+public class CreateOracleSchemaTest {
 
     @Test
     public void simpleCreate() throws Exception {
