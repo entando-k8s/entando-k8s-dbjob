@@ -2,6 +2,7 @@ package org.entando.k8s.db.job;
 
 import java.util.Map;
 import java.util.Optional;
+import javax.enterprise.context.ApplicationScoped;
 
 public class PropertiesBasedDatabaseAdminConfig implements DatabaseAdminConfig {
 

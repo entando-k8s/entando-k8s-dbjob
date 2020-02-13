@@ -1,20 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
-        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+        xmlns="http://maven.apache.org/POM/4.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.entando.kubernetes</groupId>
-        <version>6.0.18</version>
         <artifactId>entando-k8s-infrastructure-parent</artifactId>
-        <relativePath/>
+        <version>6.0.18</version>
+        <relativePath></relativePath>
     </parent>
-    <version>6.0.0-SNAPSHOT</version>
     <artifactId>entando-k8s-dbjob</artifactId>
+    <version>6.0.0-SNAPSHOT</version>
     <name>Entando K8S Database Job</name>
     <description>Entando's K8S Database Job</description>
-    <inceptionYear>2019</inceptionYear>
     <url>https://central.entando.com</url>
-
+    <inceptionYear>2019</inceptionYear>
+    <organization>
+        <name>Entando Inc.</name>
+        <url>http://www.entando.com/</url>
+    </organization>
     <licenses>
         <license>
             <name>GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1, February 1999</name>
@@ -22,44 +26,35 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
-    <organization>
-        <name>Entando Inc.</name>
-        <url>http://www.entando.com/</url>
-    </organization>
-    <repositories>
-        <repository>
-            <id>jx-releases</id>
-            <url>https://nexus-jx.apps.serv.run/repository/maven-releases/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
     <scm>
         <connection>scm:git:git@github.com:${github.organization}/${project.artifactId}.git</connection>
         <developerConnection>scm:git:git@github.com:${github.organization}/${project.artifactId}.git
         </developerConnection>
         <url>https://github.com/${github.organization}/${project.artifactId}/</url>
-        <tag>HEAD</tag>
     </scm>
-    <properties>
-        <github.organization>entando-k8s</github.organization>
-        <sonar.projectKey>${github.organization}_${project.artifactId}</sonar.projectKey>
-        <sonar.junit.reportPaths>target/surefire-reports</sonar.junit.reportPaths>
-        <entando.k8s.operator.common.version>6.0.101</entando.k8s.operator.common.version>
-    </properties>
     <issueManagement>
         <system>Github</system>
         <url>https://github.com/${github.organization}/${project.artifactId}/issues/</url>
     </issueManagement>
-
+    <properties>
+        <entando.k8s.operator.common.version>6.0.101</entando.k8s.operator.common.version>
+        <github.organization>entando-k8s</github.organization>
+        <sonar.junit.reportPaths>target/surefire-reports</sonar.junit.reportPaths>
+        <sonar.projectKey>${github.organization}_${project.artifactId}</sonar.projectKey>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-core</artifactId>
+            <artifactId>quarkus-arc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-jdbc-postgresql</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-jdbc-mysql</artifactId>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -74,10 +69,9 @@
         <dependency>
             <groupId>com.oracle.ojdbc</groupId>
             <artifactId>ojdbc8</artifactId>
-            <scope>compile</scope>
             <version>19.3.0.0</version>
+            <scope>compile</scope>
         </dependency>
-
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
@@ -97,9 +91,9 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>entando-k8s-operator-common</artifactId>
             <version>${entando.k8s.operator.common.version}</version>
-            <scope>test</scope>
             <type>test-jar</type>
             <classifier>tests</classifier>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.awaitility</groupId>
@@ -107,32 +101,38 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+    <repositories>
+        <repository>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>jx-releases</id>
+            <url>https://nexus-jx.apps.serv.run/repository/maven-releases/</url>
+        </repository>
+    </repositories>
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>2.8.2</version>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0-M1</version>
+            </plugin>
+        </plugins>
+    </build>
     <profiles>
         <profile>
             <id>native</id>
             <properties>
-                <!--NB!!! the format of this property value is extremely important: comma separated, no spaces, no linebreaks -->
                 <quarkus.native.additional-build-args>
                     --report-unsupported-elements-at-runtime,-H:ReflectionConfigurationFiles=reflection-config.json,-H:ResourceConfigurationFiles=resources-config.json,-H:DynamicProxyConfigurationFiles=proxy-config.json
                 </quarkus.native.additional-build-args>
             </properties>
         </profile>
     </profiles>
-
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <version>2.8.2</version>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.0.0-M1</version>
-            </plugin>
-        </plugins>
-    </build>
 </project>
