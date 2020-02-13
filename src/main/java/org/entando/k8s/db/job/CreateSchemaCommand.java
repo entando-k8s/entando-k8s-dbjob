@@ -16,18 +16,19 @@ public class CreateSchemaCommand {
     private int status = 0;
 
     @Inject
-    public CreateSchemaCommand(DatabaseAdminConfig databaseAdminConfig) {
+    public CreateSchemaCommand(PropertiesBasedDatabaseAdminConfig databaseAdminConfig) {
         this.databaseAdminConfig = databaseAdminConfig;
     }
 
     public void onStartup(@Observes StartupEvent startupEvent) {
-        LOGGER.entering(CreateSchemaCommand.class.getName(), "onStartup");
+        LOGGER.severe("onStartup");
         try {
             execute();
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Schema creation failed.", e);
             status = -1;
         } finally {
+            LOGGER.severe("onStartup:finally");
             new Thread(() -> System.exit(status)).start();
         }
     }
