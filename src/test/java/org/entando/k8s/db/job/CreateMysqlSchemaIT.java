@@ -102,7 +102,7 @@ public class CreateMysqlSchemaIT {
     }
 
     private String getDatabaseServerHost() {
-        return ofNullable(System.getenv("MYSQL_SERVER_HOST")).orElse("localhost");
+        return ofNullable(System.getenv("EXTERNAL_MYSQL_SERVICE_HOST")).orElse("localhost");
     }
 
     @Test

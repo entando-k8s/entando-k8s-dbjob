@@ -76,7 +76,7 @@ public class CreateOracleSchemaIT {
     }
 
     private String getDatabaseServerHost() {
-        return ofNullable(System.getenv("DATABASE_SERVER_HOST")).orElse("localhost");
+        return ofNullable(System.getenv("EXTERNAL_ORACLE_SERVICE_HOST")).orElse("localhost");
     }
 
     @Test
