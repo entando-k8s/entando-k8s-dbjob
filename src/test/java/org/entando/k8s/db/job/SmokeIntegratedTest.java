@@ -17,6 +17,8 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.entando.kubernetes.controller.EntandoImageResolver;
 import org.entando.kubernetes.controller.integrationtest.podwaiters.JobPodWaiter;
 import org.entando.kubernetes.controller.integrationtest.podwaiters.ServicePodWaiter;
@@ -59,6 +61,7 @@ public class SmokeIntegratedTest {
         try {
             runnable.run();
         } catch (RuntimeException e) {
+            Logger.getAnonymousLogger().log(Level.WARNING, "Operation failed.", e);
         }
 
     }
