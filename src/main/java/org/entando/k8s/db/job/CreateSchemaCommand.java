@@ -10,7 +10,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 
 @ApplicationScoped
-public class CreateSchemaCommand  {
+public class CreateSchemaCommand {
 
     private static final Logger LOGGER = Logger.getLogger(CreateSchemaCommand.class.getName());
     private DatabaseAdminConfig databaseAdminConfig;
