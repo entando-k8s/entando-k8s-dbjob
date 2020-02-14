@@ -97,14 +97,24 @@ public class SmokeIntegratedTest {
                 .endPort()
                 .endSubset()
                 .build());
-        try (Connection connection = DriverManager
-                .getConnection("jdbc:postgresql://" + service.getSpec().getClusterIP() + ":5432/" + DATABASE_NAME, MYSCHEMA, MYPASSWORD)) {
+        try (Connection connection = attemptConnection(service)) {
             connection.prepareStatement("CREATE TABLE TEST_TABLE(ID NUMERIC )").execute();
             connection.prepareStatement("TRUNCATE TEST_TABLE").execute();
             connection.prepareStatement("INSERT INTO MYSCHEMA.TEST_TABLE (ID) VALUES (5)").execute();
             //and access them without having to specify the schema as prefix
             assertTrue(connection.prepareStatement("SELECT * FROM TEST_TABLE WHERE ID=5").executeQuery().next());
         }
+    }
+
+    private Connection attemptConnection(Service service) throws SQLException {
+        await().atMost(1, TimeUnit.MINUTES).ignoreExceptions().until(() -> {
+            DriverManager
+                    .getConnection("jdbc:postgresql://" + service.getSpec().getClusterIP() + ":5432/" + DATABASE_NAME, MYSCHEMA, MYPASSWORD)
+                    .close();
+            return true;
+        });
+        return DriverManager
+                .getConnection("jdbc:postgresql://" + service.getSpec().getClusterIP() + ":5432/" + DATABASE_NAME, MYSCHEMA, MYPASSWORD);
     }
 
     private void runDbSchemaJobAgainst(String ip) {
