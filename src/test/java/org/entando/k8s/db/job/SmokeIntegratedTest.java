@@ -70,7 +70,9 @@ public class SmokeIntegratedTest {
     private void runDbSchemaJobAgainst(String ip) {
         client.pods().inNamespace(NAMESPACE).createNew().withNewMetadata().withName("dbjob")
                 .endMetadata()
-                .withNewSpec().addNewContainer()
+                .withNewSpec()
+                .withRestartPolicy("Never")
+                .addNewContainer()
                 .withName("dbjob-container")
                 .withImage(resolveImage())
                 .withEnv(new EnvVar("DATABASE_ADMIN_USER", ADMIN_USER, null),
