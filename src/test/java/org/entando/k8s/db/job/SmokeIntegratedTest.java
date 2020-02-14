@@ -26,8 +26,8 @@ import org.junit.jupiter.api.Test;
 @Tags(@Tag("inter-process"))
 public class SmokeIntegratedTest {
 
-    public static final String ADMIN_USER = "testUser";
-    public static final String ADMIN_PASSWORD = "test123";
+    public static final String ADMIN_USER = "postgres";
+    public static final String ADMIN_PASSWORD = "postgres";
     public static final String PORT = "5432";
     public static final String DATABASE_NAME = "testdb";
     public static final String MYSCHEMA = "myschema";
