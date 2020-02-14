@@ -105,8 +105,8 @@ public class SmokeIntegratedTest {
                         "psql -h 127.0.0.1 -U ${POSTGRESQL_USER} -q -d postgres -c '\\l'|grep ${POSTGRESQL_DATABASE}")
                 .endExec()
                 .endReadinessProbe()
-                .withEnv(new EnvVar("POSTGRESQL_USER", ADMIN_USER, null),
-                        new EnvVar("POSTGRESQL_PASSWORD", ADMIN_PASSWORD, null),
+                .withEnv(new EnvVar("POSTGRESQL_USER", "notused", null),
+                        new EnvVar("POSTGRESQL_PASSWORD", "notused", null),
                         new EnvVar("POSTGRESQL_DATABASE", "testdb", null),
                         new EnvVar("POSTGRESQL_ADMIN_PASSWORD", "postgres", null))
                 .endContainer().endSpec().done();
