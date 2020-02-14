@@ -4,8 +4,11 @@ import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.fabric8.kubernetes.api.model.DoneablePod;
+import io.fabric8.kubernetes.api.model.EndpointsBuilder;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.PodResource;
@@ -33,6 +36,7 @@ public class SmokeIntegratedTest {
     public static final String MYSCHEMA = "myschema";
     public static final String MYPASSWORD = "mypassword";
     private static final String NAMESPACE = EntandoOperatorTestConfig.calculateNameSpace("dbjob-ns");
+    public static final String LOCAL_SERVICE_NAME = NAMESPACE + "-pg-service";
     KubernetesClient client = new DefaultKubernetesClient();
 
     @BeforeEach
@@ -42,6 +46,19 @@ public class SmokeIntegratedTest {
         } else {
             client.pods().inNamespace(NAMESPACE).delete();
             await().atMost(2, TimeUnit.MINUTES).until(() -> client.pods().inNamespace(NAMESPACE).list().getItems().isEmpty());
+        }
+        cleanupLocalResources();
+    }
+
+    private void cleanupLocalResources() {
+        force(() -> client.services().inNamespace(client.getNamespace()).withName(LOCAL_SERVICE_NAME).delete());
+        force(() -> client.endpoints().inNamespace(client.getNamespace()).withName(LOCAL_SERVICE_NAME).delete());
+    }
+
+    private void force(Runnable runnable) {
+        try {
+            runnable.run();
+        } catch (RuntimeException e) {
         }
 
     }
@@ -57,8 +74,28 @@ public class SmokeIntegratedTest {
     }
 
     private void verifyDatabaseConnection(String ip) throws SQLException {
+        Service service = client.services()
+                .create(new ServiceBuilder().withNewMetadata().withName(LOCAL_SERVICE_NAME).withNamespace(client.getNamespace())
+                        .endMetadata()
+                        .withNewSpec()
+                        .addNewPort()
+                        .withPort(5432)
+                        .withNewTargetPort(5432)
+                        .endPort()
+                        .endSpec()
+                        .build());
+        client.endpoints().create(new EndpointsBuilder().withNewMetadata().withName(LOCAL_SERVICE_NAME).withNamespace(client.getNamespace())
+                .endMetadata()
+                .addNewSubset()
+                .addNewAddress().withIp(ip)
+                .endAddress()
+                .addNewPort()
+                .withPort(5432)
+                .endPort()
+                .endSubset()
+                .build());
         try (Connection connection = DriverManager
-                .getConnection("jdbc:postgresql://" + ip + ":5432/" + DATABASE_NAME, MYSCHEMA, MYPASSWORD)) {
+                .getConnection("jdbc:postgresql://" + service.getSpec().getClusterIP() + ":5432/" + DATABASE_NAME, MYSCHEMA, MYPASSWORD)) {
             connection.prepareStatement("CREATE TABLE TEST_TABLE(ID NUMERIC )").execute();
             connection.prepareStatement("TRUNCATE TEST_TABLE").execute();
             connection.prepareStatement("INSERT INTO MYSCHEMA.TEST_TABLE (ID) VALUES (5)").execute();
