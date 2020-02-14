@@ -73,10 +73,22 @@ public class SmokeIntegratedTest {
         //When I run the DBSchemaJob image against that IP
         runDbSchemaJobAgainst(ip);
         //Then I can connect to the database using the resulting schema
-        verifyDatabaseConnection(ip);
+        Service service = createDelegatingServiceTo(ip);
+        verifyDatabaseState(service);
+        cleanupLocalResources();//Only on success
     }
 
-    private void verifyDatabaseConnection(String ip) throws SQLException {
+    private void verifyDatabaseState(Service service) throws SQLException {
+        try (Connection connection = attemptConnection(service)) {
+            connection.prepareStatement("CREATE TABLE TEST_TABLE(ID NUMERIC )").execute();
+            connection.prepareStatement("TRUNCATE TEST_TABLE").execute();
+            connection.prepareStatement("INSERT INTO MYSCHEMA.TEST_TABLE (ID) VALUES (5)").execute();
+            //and access them without having to specify the schema as prefix
+            assertTrue(connection.prepareStatement("SELECT * FROM TEST_TABLE WHERE ID=5").executeQuery().next());
+        }
+    }
+
+    private Service createDelegatingServiceTo(String ip) {
         Service service = client.services()
                 .create(new ServiceBuilder().withNewMetadata().withName(LOCAL_SERVICE_NAME).withNamespace(client.getNamespace())
                         .endMetadata()
@@ -97,13 +109,7 @@ public class SmokeIntegratedTest {
                 .endPort()
                 .endSubset()
                 .build());
-        try (Connection connection = attemptConnection(service)) {
-            connection.prepareStatement("CREATE TABLE TEST_TABLE(ID NUMERIC )").execute();
-            connection.prepareStatement("TRUNCATE TEST_TABLE").execute();
-            connection.prepareStatement("INSERT INTO MYSCHEMA.TEST_TABLE (ID) VALUES (5)").execute();
-            //and access them without having to specify the schema as prefix
-            assertTrue(connection.prepareStatement("SELECT * FROM TEST_TABLE WHERE ID=5").executeQuery().next());
-        }
+        return service;
     }
 
     private Connection attemptConnection(Service service) throws SQLException {
