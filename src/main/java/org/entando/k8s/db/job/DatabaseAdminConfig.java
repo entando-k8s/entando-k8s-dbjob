@@ -21,4 +21,6 @@ public interface DatabaseAdminConfig {
     String getDatabaseVendor();
 
     Optional<String> getTablespace();
+
+    Optional<String> getDatabaseIdentifierType();
 }

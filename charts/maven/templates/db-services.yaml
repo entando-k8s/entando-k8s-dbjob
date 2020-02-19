@@ -15,7 +15,7 @@ metadata:
   name: "external-postgresql"
 subsets:
   - addresses:
-      - ip: "172.30.7.132"
+      - ip: "10.128.1.212"
     ports:
       - port: 5432
 ---
@@ -35,7 +35,7 @@ metadata:
   name: "external-mysql"
 subsets:
   - addresses:
-      - ip: "172.30.71.59"
+      - ip: "10.128.1.64"
     ports:
       - port: 3306
 ---
@@ -55,6 +55,26 @@ metadata:
   name: "external-oracle"
 subsets:
   - addresses:
-      - ip: "172.30.12.235"
+      - ip: "10.128.0.105"
+    ports:
+      - port: 1521
+---
+kind: "Service"
+apiVersion: "v1"
+metadata:
+  name: "external-oracle11"
+spec:
+  ports:
+    - port: 1521
+      targetPort: 1521
+selector: {}
+---
+kind: "Endpoints"
+apiVersion: "v1"
+metadata:
+  name: "external-oracle11"
+subsets:
+  - addresses:
+      - ip: "10.128.0.122"
     ports:
       - port: 1521

@@ -56,6 +56,11 @@ public class PropertiesBasedDatabaseAdminConfig implements DatabaseAdminConfig {
     }
 
     @Override
+    public Optional<String> getDatabaseIdentifierType() {
+        return Optional.ofNullable(getProperties().get("DATABASE_IDENTIFIER_TYPE"));
+    }
+
+    @Override
     public Optional<String> getTablespace() {
         return Optional.ofNullable(getProperties().get("TABLESPACE"));
     }

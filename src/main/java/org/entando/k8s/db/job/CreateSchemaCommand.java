@@ -15,8 +15,11 @@ public class CreateSchemaCommand {
     private static final Logger LOGGER = Logger.getLogger(CreateSchemaCommand.class.getName());
     private DatabaseAdminConfig databaseAdminConfig;
     private int status = 0;
+    private Runnable autoExit = () -> {
+    };
 
     public CreateSchemaCommand() {
+        autoExit = () -> System.exit(status);
         this.databaseAdminConfig = new PropertiesBasedDatabaseAdminConfig(System.getenv());
     }
 
@@ -25,7 +28,6 @@ public class CreateSchemaCommand {
     }
 
     public void onStartup(@Observes StartupEvent startupEvent) {
-        new Thread(() -> System.exit(status)).start();
         LOGGER.severe("onStartup");
         try {
             execute();
@@ -34,7 +36,7 @@ public class CreateSchemaCommand {
             status = -1;
         } finally {
             LOGGER.severe("onStartup:finally");
-            new Thread(() -> System.exit(status)).start();
+            new Thread(autoExit).start();
         }
     }
 

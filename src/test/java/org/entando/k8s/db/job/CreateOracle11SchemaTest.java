@@ -6,31 +6,31 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Tags;
 
 @Tags(@Tag("in-process"))
-public class CreateOracleSchemaTest extends CreateOracleSchemaTestBase {
+public class CreateOracle11SchemaTest extends CreateOracleSchemaTestBase {
 
     @Override
     protected String getPort() {
-        return "1521";
+        return System.getenv("EXTERNAL_ORACLE11_SERVICE_HOST") == null ? "1522" : "1521";
     }
 
     @Override
     protected String getDatabaseName() {
-        return "ORCLPDB1.localdomain";
+        return "xe";
     }
 
     @Override
     protected String getAdminPassword() {
-        return "admin";
+        return "oracle";
     }
 
     @Override
     protected String getAdminUser() {
-        return "admin";
+        return "system";
     }
 
     @Override
     protected String getDatabaseServerHost() {
-        return ofNullable(System.getenv("EXTERNAL_ORACLE_SERVICE_HOST")).orElse("localhost");
+        return ofNullable(System.getenv("EXTERNAL_ORACLE11_SERVICE_HOST")).orElse("localhost");
     }
 
 }

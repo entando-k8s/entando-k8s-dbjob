@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import com.mysql.cj.jdbc.MysqlDataSource;
+import io.quarkus.runtime.StartupEvent;
 import java.io.CharArrayWriter;
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -30,7 +31,7 @@ public class CreateMysqlSchemaTest {
         CreateSchemaCommand cmd = new CreateSchemaCommand(new PropertiesBasedDatabaseAdminConfig(props));
         cmd.undo();
         //When I perform the CreateSchema command
-        cmd.execute();
+        cmd.onStartup(new StartupEvent());
         //Then the new user will have access to his own schema to create database objects
         try (Connection connection = DriverManager
                 .getConnection("jdbc:mysql://" + getDatabaseServerHost() + ":3306/myschema", "myschema", "test123")) {
