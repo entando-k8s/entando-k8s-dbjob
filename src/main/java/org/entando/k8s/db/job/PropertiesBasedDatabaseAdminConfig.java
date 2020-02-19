@@ -1,5 +1,8 @@
 package org.entando.k8s.db.job;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -56,8 +59,13 @@ public class PropertiesBasedDatabaseAdminConfig implements DatabaseAdminConfig {
     }
 
     @Override
-    public Optional<String> getDatabaseIdentifierType() {
-        return Optional.ofNullable(getProperties().get("DATABASE_IDENTIFIER_TYPE"));
+    public List<String> getJdbcParameters() {
+        String params = getProperties().get("JDBC_PARAMETERS");
+        if (params == null) {
+            return Collections.emptyList();
+        } else {
+            return Arrays.asList(params.split("\\,"));
+        }
     }
 
     @Override

@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -13,17 +14,21 @@ public enum DatabaseDialect {
     MYSQL() {
         @Override
         public Connection connect(DatabaseAdminConfig config) throws SQLException {
-            String url = format("jdbc:mysql://%s:%s", config.getDatabaseServerHost(), config.getDatabaseServerPort());
+            String url = format("jdbc:mysql://%s:%s%s",
+                    config.getDatabaseServerHost(),
+                    config.getDatabaseServerPort(),
+                    parameterSuffix(config.getJdbcParameters()));
             return DriverManager.getConnection(url, config.getDatabaseAdminUser(), config.getDatabaseAdminPassword());
         }
 
         @Override
         public boolean schemaExists(DatabaseAdminConfig config) throws SQLException {
             try {
-                String url = format("jdbc:mysql://%s:%s/%s",
+                String url = format("jdbc:mysql://%s:%s/%s%s",
                         config.getDatabaseServerHost(),
                         config.getDatabaseServerPort(),
-                        config.getDatabaseUser());
+                        config.getDatabaseUser(),
+                        parameterSuffix(config.getJdbcParameters()));
                 DriverManager.getConnection(url, config.getDatabaseUser(), config.getDatabasePassword()).close();
                 return true;
             } catch (SQLException e) {
@@ -56,8 +61,12 @@ public enum DatabaseDialect {
         }
 
         private String buildUrl(DatabaseAdminConfig config) {
-            return format("jdbc:postgresql://%s:%s/%s", config.getDatabaseServerHost(), config.getDatabaseServerPort(),
-                    config.getDatabaseName());
+            return format("jdbc:postgresql://%s:%s/%s%s",
+                    config.getDatabaseServerHost(),
+                    config.getDatabaseServerPort(),
+                    config.getDatabaseName(),
+                    parameterSuffix(config.getJdbcParameters())
+            );
         }
 
         @Override
@@ -86,8 +95,6 @@ public enum DatabaseDialect {
         }
     },
     ORACLE() {
-        public static final String FORMAT = "jdbc:oracle:thin:@//%s:%s/%s";
-
         @Override
         public Connection connect(DatabaseAdminConfig config) throws SQLException {
             String url = buildUrl(config);
@@ -106,14 +113,16 @@ public enum DatabaseDialect {
         }
 
         private String buildUrl(DatabaseAdminConfig config) {
-            return format(FORMAT, config.getDatabaseServerHost(), config.getDatabaseServerPort(),
-                    config.getDatabaseName());
+            return format("jdbc:oracle:thin:@//%s:%s/%s%s",
+                    config.getDatabaseServerHost(),
+                    config.getDatabaseServerPort(),
+                    config.getDatabaseName(),
+                    parameterSuffix(config.getJdbcParameters()));
         }
 
         @Override
 
         public void createUserAndSchema(Statement statement, DatabaseAdminConfig config) throws SQLException {
-            //            statement.execute("alter session set \"_ORACLE_SCRIPT\"=true;");
             statement.execute(format("CREATE USER %s IDENTIFIED BY \"%s\"", config.getDatabaseUser(), config.getDatabasePassword()));
             String sql = format(
                     "GRANT CREATE PROCEDURE, CREATE TRIGGER, CREATE PUBLIC SYNONYM, CREATE SEQUENCE, CREATE SESSION, CREATE SYNONYM,"
@@ -153,6 +162,14 @@ public enum DatabaseDialect {
     public abstract void createUserAndSchema(Statement statement, DatabaseAdminConfig config) throws SQLException;
 
     public abstract void dropUserAndSchema(Statement st, DatabaseAdminConfig config);
+
+    protected String parameterSuffix(List<String> jdbcParameters) {
+        if (jdbcParameters.isEmpty()) {
+            return "";
+        } else {
+            return "?" + String.join("&", jdbcParameters);
+        }
+    }
 
     private interface SqlAction {
 

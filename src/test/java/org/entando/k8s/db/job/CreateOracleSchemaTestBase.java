@@ -75,6 +75,7 @@ public abstract class CreateOracleSchemaTestBase {
         props.put("DATABASE_SERVER_PORT", getPort());
         props.put("DATABASE_VENDOR", "oracle");
         props.put("DATABASE_NAME", getDatabaseName());
+        props.put("JDBC_PARAMETERS", "oracle.jdbc.timezoneAsRegion=false");
         return props;
     }
 

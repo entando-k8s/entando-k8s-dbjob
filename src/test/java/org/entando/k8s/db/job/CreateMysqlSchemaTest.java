@@ -99,6 +99,7 @@ public class CreateMysqlSchemaTest {
         props.put("DATABASE_SERVER_HOST", getDatabaseServerHost());
         props.put("DATABASE_SERVER_PORT", "3306");
         props.put("DATABASE_VENDOR", "mysql");
+        props.put("JDBC_PARAMETERS", "useSSL=false");
         return props;
     }
 

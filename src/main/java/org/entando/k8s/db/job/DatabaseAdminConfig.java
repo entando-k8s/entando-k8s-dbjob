@@ -1,5 +1,6 @@
 package org.entando.k8s.db.job;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface DatabaseAdminConfig {
@@ -22,5 +23,5 @@ public interface DatabaseAdminConfig {
 
     Optional<String> getTablespace();
 
-    Optional<String> getDatabaseIdentifierType();
+    List<String> getJdbcParameters();
 }
