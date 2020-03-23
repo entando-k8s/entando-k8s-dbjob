@@ -84,7 +84,8 @@ pipelineConfig:
       build:
         replace: true
         steps:
-          - sh: fetch-history-by-days 30
+#          - sh: fetch-history-by-days 30
+          - sh: git pull
             name: fetch-history-for-sonar
           - sh: mvn-deploy-release -P${EXECUTABLE_TYPE}
             name: mvn-deploy-release
