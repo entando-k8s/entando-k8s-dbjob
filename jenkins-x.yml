@@ -7,12 +7,61 @@ pipelineConfig:
       value: dj
     - name: _JAVA_OPTIONS
       value: -XX:+UnlockExperimentalVMOptions -Dsun.zip.disableMemoryMapping=true -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Xms1000m -Xmx12000m
+    - name: MYSQL_ADMIN_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: entando-jx-common-secret
+          key: mysql.admin.password
+    - name: MYSQL_ADMIN_USER
+      valueFrom:
+        secretKeyRef:
+          name: entando-jx-common-secret
+          key: mysql.admin.user
     - name: ORACLE11_ADMIN_USER
       valueFrom:
         secretKeyRef:
-          name: asdf
-          key:
-
+          name: entando-jx-common-secret
+          key: oracle11.admin.user
+    - name: ORACLE11_ADMIN_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: entando-jx-common-secret
+          key: oracle11.admin.password
+    - name: ORACLE11_DATABASE_NAME
+      valueFrom:
+        secretKeyRef:
+          name: entando-jx-common-secret
+          key: oracle11.database.name
+    - name: ORACLE12_ADMIN_USER
+      valueFrom:
+        secretKeyRef:
+          name: entando-jx-common-secret
+          key: oracle12.admin.user
+    - name: ORACLE12_ADMIN_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: entando-jx-common-secret
+          key: oracle12.admin.password
+    - name: ORACLE12_DATABASE_NAME
+      valueFrom:
+        secretKeyRef:
+          name: entando-jx-common-secret
+          key: oracle12.database.name
+    - name: POSTGRESQL_ADMIN_USER
+      valueFrom:
+        secretKeyRef:
+          name: entando-jx-common-secret
+          key: postgresql.admin.user
+    - name: POSTGRESQL_ADMIN_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: entando-jx-common-secret
+          key: postgresql.admin.password
+    - name: POSTGRESQL_DATABASE_NAME
+      valueFrom:
+        secretKeyRef:
+          name: entando-jx-common-secret
+          key: postgresql.database.name
   pipelines:
     pullRequest:
       build:
