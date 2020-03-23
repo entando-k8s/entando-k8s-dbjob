@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Tags;
 
 @Tags(@Tag("in-process"))
-public class CreateOracleSchemaTest extends CreateOracleSchemaTestBase {
+public class CreateOracle12SchemaTest extends CreateOracleSchemaTestBase {
 
     @Override
     protected String getPort() {
@@ -15,17 +15,17 @@ public class CreateOracleSchemaTest extends CreateOracleSchemaTestBase {
 
     @Override
     protected String getDatabaseName() {
-        return "ORCLPDB1.localdomain";
+        return TestConfigProperty.ORACLE12_DATABASE_NAME.resolve();
     }
 
     @Override
     protected String getAdminPassword() {
-        return "admin";
+        return TestConfigProperty.ORACLE12_ADMIN_PASSWORD.resolve();
     }
 
     @Override
     protected String getAdminUser() {
-        return "admin";
+        return TestConfigProperty.ORACLE12_ADMIN_USER.resolve();
     }
 
     @Override

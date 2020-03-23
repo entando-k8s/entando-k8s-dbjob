@@ -94,8 +94,8 @@ public class CreateMysqlSchemaTest {
     private Map<String, String> getBaseProperties() {
         //NB! These correspond to the ENV vars in docker-compose-cicd.yml
         Map<String, String> props = new HashMap<>();
-        props.put("DATABASE_ADMIN_USER", "root");
-        props.put("DATABASE_ADMIN_PASSWORD", "Password1");
+        props.put("DATABASE_ADMIN_USER", TestConfigProperty.MYSQL_ADMIN_USER.resolve());
+        props.put("DATABASE_ADMIN_PASSWORD", TestConfigProperty.MYSQL_ADMIN_PASSWORD.resolve());
         props.put("DATABASE_SERVER_HOST", getDatabaseServerHost());
         props.put("DATABASE_SERVER_PORT", "3306");
         props.put("DATABASE_VENDOR", "mysql");
