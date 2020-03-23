@@ -15,17 +15,17 @@ public class CreateOracle11SchemaTest extends CreateOracleSchemaTestBase {
 
     @Override
     protected String getDatabaseName() {
-        return "xe";
+        return TestConfigProperty.ORACLE11_DATABASE_NAME.resolve();
     }
 
     @Override
     protected String getAdminPassword() {
-        return "oracle";
+        return TestConfigProperty.ORACLE11_ADMIN_PASSWORD.resolve();
     }
 
     @Override
     protected String getAdminUser() {
-        return "system";
+        return TestConfigProperty.ORACLE11_ADMIN_USER.resolve();
     }
 
     @Override

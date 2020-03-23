@@ -76,14 +76,14 @@ public class CreatePostgresqlSchemaTest {
     }
 
     private String getDatabaseName() {
-        return "sampledb";
+        return TestConfigProperty.POSTGRESQL_DATABASE_NAME.resolve();
     }
 
     private Map<String, String> getBaseProperties() {
         //NB! These correspond to the ENV vars in docker-compose-cicd.yml
         Map<String, String> props = new HashMap<>();
-        props.put("DATABASE_ADMIN_USER", "postgres");
-        props.put("DATABASE_ADMIN_PASSWORD", "postgres");
+        props.put("DATABASE_ADMIN_USER", TestConfigProperty.POSTGRESQL_ADMIN_USER.resolve());
+        props.put("DATABASE_ADMIN_PASSWORD", TestConfigProperty.POSTGRESQL_ADMIN_PASSWORD.resolve());
         props.put("DATABASE_SERVER_HOST", getDatabaseServerHost());
         props.put("DATABASE_SERVER_PORT", "5432");
         props.put("DATABASE_VENDOR", "postgresql");
