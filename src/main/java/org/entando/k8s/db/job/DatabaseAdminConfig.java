@@ -24,4 +24,6 @@ public interface DatabaseAdminConfig {
     Optional<String> getTablespace();
 
     List<String> getJdbcParameters();
+
+    boolean forcePasswordReset();
 }

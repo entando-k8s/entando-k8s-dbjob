@@ -2,15 +2,16 @@ package org.entando.k8s.db.job;
 
 import static java.util.Optional.ofNullable;
 
+import oracle.jdbc.pool.OracleDataSource;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Tags;
 
-@Tags(@Tag("in-process"))
+@Tags(@Tag("integration"))
 public class CreateOracle11SchemaTest extends CreateOracleSchemaTestBase {
 
     @Override
     protected String getPort() {
-        return System.getenv("EXTERNAL_ORACLE11_SERVICE_HOST") == null ? "1522" : "1521";
+        return ofNullable(System.getenv("EXTERNAL_ORACLE11_SERVICE_PORT")).orElse("1521");
     }
 
     @Override
@@ -26,6 +27,10 @@ public class CreateOracle11SchemaTest extends CreateOracleSchemaTestBase {
     @Override
     protected String getAdminUser() {
         return TestConfigProperty.ORACLE11_ADMIN_USER.resolve();
+    }
+
+    protected void setDatabaseServiceName(OracleDataSource ds) {
+        ds.setDatabaseName(getDatabaseName());
     }
 
     @Override

@@ -69,6 +69,11 @@ public class PropertiesBasedDatabaseAdminConfig implements DatabaseAdminConfig {
     }
 
     @Override
+    public boolean forcePasswordReset() {
+        return "true".equals(getProperties().get("FORCE_PASSWORD_RESET"));
+    }
+
+    @Override
     public Optional<String> getTablespace() {
         return Optional.ofNullable(getProperties().get("TABLESPACE"));
     }

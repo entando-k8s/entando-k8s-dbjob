@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import com.mysql.cj.jdbc.MysqlDataSource;
 import io.quarkus.runtime.StartupEvent;
+
 import java.io.CharArrayWriter;
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -13,11 +14,12 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
-@Tags(@Tag("in-process"))
+@Tags(@Tag("integration"))
 public class CreateMysqlSchemaTest {
 
     @Test
@@ -34,7 +36,7 @@ public class CreateMysqlSchemaTest {
         cmd.onStartup(new StartupEvent());
         //Then the new user will have access to his own schema to create database objects
         try (Connection connection = DriverManager
-                .getConnection("jdbc:mysql://" + getDatabaseServerHost() + ":3306/myschema", "myschema", "test123")) {
+                .getConnection("jdbc:mysql://" + getDatabaseServerHost() + ":" + getDatabaseServerPort() + "/myschema", "myschema", "test123")) {
             connection.prepareStatement("CREATE TABLE TEST_TABLE(ID NUMERIC )").execute();
             connection.prepareStatement("TRUNCATE TEST_TABLE").execute();
             connection.prepareStatement("INSERT INTO myschema.TEST_TABLE (ID) VALUES (5)").execute();
@@ -45,23 +47,41 @@ public class CreateMysqlSchemaTest {
 
     @Test
     public void testIdempotent() throws Exception {
-        //Give that a specific user/schema combination does not exist
+        //Given that a specific user/schema combination does not exist
         Map<String, String> props = getBaseProperties();
         props.put("DATABASE_USER", "myschema");
         props.put("DATABASE_PASSWORD", "test123");
         CreateSchemaCommand cmd = new CreateSchemaCommand(new PropertiesBasedDatabaseAdminConfig(props));
         cmd.undo();
         //But then it is created
-        testCreate(props);
-        //Expected a second attempt not to fail, even though it doesn't change
-        testCreate(props);
+        testCreate(props, "test123");
+        //Expect a second attempt not to fail, even though it doesn't change
+        testCreate(props, "test123");
     }
 
-    private void testCreate(Map<String, String> props) throws Exception {
+    @Test
+    public void testForcePasswordReset() throws Exception {
+        //Given that a specific user/schema combination does not exist
+        Map<String, String> props = getBaseProperties();
+        props.put("DATABASE_USER", "myschema");
+        props.put("DATABASE_PASSWORD", "test123");
+        CreateSchemaCommand cmd = new CreateSchemaCommand(new PropertiesBasedDatabaseAdminConfig(props));
+        cmd.undo();
+        //But then it is created
+        testCreate(props, "test123");
+        //And we enabled password resets
+        props.put("FORCE_PASSWORD_RESET", "true");
+        //When it is recreated with a different password
+        props.put("DATABASE_PASSWORD", "test456");
+        //Expect  a second attempt not to fail, even though it doesn't change
+        testCreate(props, "test456");
+    }
+
+    private void testCreate(Map<String, String> props, String password) throws Exception {
         CreateSchemaCommand cmd = new CreateSchemaCommand(new PropertiesBasedDatabaseAdminConfig(props));
         cmd.execute();
         try (Connection connection = DriverManager
-                .getConnection("jdbc:mysql://" + getDatabaseServerHost() + ":3306/myschema", "myschema", "test123")) {
+                .getConnection("jdbc:mysql://" + getDatabaseServerHost() + ":" + getDatabaseServerPort() + "/myschema", "myschema", password)) {
             assertTrue(connection.prepareStatement("SELECT 1 FROM  DUAL").executeQuery().next());
         }
     }
@@ -80,7 +100,7 @@ public class CreateMysqlSchemaTest {
         MysqlDataSource ds = new MysqlDataSource();
         ds.setServerName(getDatabaseServerHost());
         ds.setDatabaseName("myschema");
-        ds.setPortNumber(3306);
+        ds.setPortNumber(Integer.valueOf(getDatabaseServerPort()));
         //Then the new user will have access to his own schema to create database objects
         try (Connection connection = ds.getConnection("myschema", "test123")) {
             connection.prepareStatement("CREATE TABLE TEST_TABLE(ID NUMERIC )").execute();
@@ -97,10 +117,14 @@ public class CreateMysqlSchemaTest {
         props.put("DATABASE_ADMIN_USER", TestConfigProperty.MYSQL_ADMIN_USER.resolve());
         props.put("DATABASE_ADMIN_PASSWORD", TestConfigProperty.MYSQL_ADMIN_PASSWORD.resolve());
         props.put("DATABASE_SERVER_HOST", getDatabaseServerHost());
-        props.put("DATABASE_SERVER_PORT", "3306");
+        props.put("DATABASE_SERVER_PORT", getDatabaseServerPort());
         props.put("DATABASE_VENDOR", "mysql");
         props.put("JDBC_PARAMETERS", "useSSL=false");
         return props;
+    }
+
+    private String getDatabaseServerPort() {
+        return ofNullable(System.getenv("EXTERNAL_MYSQL_SERVICE_PORT")).orElse("3306");
     }
 
     private String getDatabaseServerHost() {
@@ -126,7 +150,7 @@ public class CreateMysqlSchemaTest {
         cmd.execute();
         //Then the new user will not have access to create database objects in the existing schema
         try (Connection connection = DriverManager
-                .getConnection("jdbc:mysql://" + getDatabaseServerHost() + ":3306/myschema", "myschema", "test123")) {
+                .getConnection("jdbc:mysql://" + getDatabaseServerHost() + ":" + getDatabaseServerPort() +"/myschema", "myschema", "test123")) {
             connection.prepareStatement("CREATE TABLE existing.TEST_TABLE(ID NUMERIC )").execute();
             fail();
         } catch (SQLException e) {

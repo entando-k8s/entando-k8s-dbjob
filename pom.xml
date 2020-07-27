@@ -4,9 +4,9 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.entando.kubernetes</groupId>
-        <artifactId>entando-k8s-infrastructure-parent</artifactId>
-        <version>6.0.18</version>
+        <groupId>org.entando</groupId>
+        <artifactId>entando-quarkus-parent</artifactId>
+        <version>6.1.7</version>
         <relativePath></relativePath>
     </parent>
     <artifactId>entando-k8s-dbjob</artifactId>
@@ -37,10 +37,13 @@
         <url>https://github.com/${github.organization}/${project.artifactId}/issues/</url>
     </issueManagement>
     <properties>
-        <entando.k8s.operator.common.version>6.0.101</entando.k8s.operator.common.version>
+        <preDeploymentTestGroups>integration</preDeploymentTestGroups>
+        <postDeploymentTestGroups>end-to-end</postDeploymentTestGroups>
+        <entando.k8s.operator.common.version>6.1.10</entando.k8s.operator.common.version>
         <github.organization>entando-k8s</github.organization>
         <sonar.junit.reportPaths>target/surefire-reports</sonar.junit.reportPaths>
         <sonar.projectKey>${github.organization}_${project.artifactId}</sonar.projectKey>
+        <ojdbc8.version>19.3.0.0</ojdbc8.version>
     </properties>
     <dependencies>
         <dependency>
@@ -60,7 +63,7 @@
         <dependency>
             <groupId>com.oracle.ojdbc</groupId>
             <artifactId>ojdbc8</artifactId>
-            <version>19.3.0.0</version>
+            <version>${ojdbc8.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>

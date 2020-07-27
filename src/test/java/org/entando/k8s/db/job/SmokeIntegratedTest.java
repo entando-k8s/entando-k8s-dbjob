@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
-@Tags(@Tag("inter-process"))
+@Tags(@Tag("end-to-end"))
 public class SmokeIntegratedTest {
 
     public static final String ADMIN_USER = "postgres";
