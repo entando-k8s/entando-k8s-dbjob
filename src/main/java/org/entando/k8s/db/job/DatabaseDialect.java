@@ -2,7 +2,11 @@ package org.entando.k8s.db.job;
 
 import static java.lang.String.format;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -52,7 +56,8 @@ public enum DatabaseDialect {
 
         @Override
         public void resetPassword(Statement st, DatabaseAdminConfig databaseAdminConfig) throws SQLException {
-            st.execute(format("ALTER USER %s IDENTIFIED BY '%s';", databaseAdminConfig.getDatabaseUser(), databaseAdminConfig.getDatabasePassword()));
+            st.execute(format("ALTER USER %s IDENTIFIED BY '%s';", databaseAdminConfig.getDatabaseUser(),
+                    databaseAdminConfig.getDatabasePassword()));
         }
     },
     POSTGRESQL() {
@@ -74,10 +79,13 @@ public enum DatabaseDialect {
         @Override
         public boolean schemaExists(DatabaseAdminConfig config) throws SQLException {
             String url = buildUrl(config);
-            try (Connection connection = DriverManager.getConnection(url, config.getDatabaseAdminUser(), config.getDatabaseAdminPassword())) {
-                ResultSet resultSet = connection.createStatement().executeQuery(format("SELECT COUNT(*) FROM PG_ROLES WHERE ROLNAME='%s'", config.getDatabaseUser()));
-                resultSet.next();
-                return resultSet.getInt(1) == 1;
+            try (Connection connection = DriverManager
+                    .getConnection(url, config.getDatabaseAdminUser(), config.getDatabaseAdminPassword())) {
+                try (ResultSet resultSet = connection.createStatement()
+                        .executeQuery(format("SELECT COUNT(*) FROM PG_ROLES WHERE ROLNAME='%s'", config.getDatabaseUser()))) {
+                    resultSet.next();
+                    return resultSet.getInt(1) == 1;
+                }
             }
         }
 
@@ -111,10 +119,14 @@ public enum DatabaseDialect {
         @Override
         public boolean schemaExists(DatabaseAdminConfig config) throws SQLException {
             String url = buildUrl(config);
-            try (Connection connection = DriverManager.getConnection(url, config.getDatabaseAdminUser(), config.getDatabaseAdminPassword())) {
-                ResultSet resultSet = connection.createStatement().executeQuery(format("SELECT COUNT(*) FROM DBA_USERS WHERE USERNAME='%s'", config.getDatabaseUser().toUpperCase()));
-                resultSet.next();
-                return resultSet.getInt(1) == 1;
+            try (Connection connection = DriverManager
+                    .getConnection(url, config.getDatabaseAdminUser(), config.getDatabaseAdminPassword())) {
+                try (ResultSet resultSet = connection.createStatement()
+                        .executeQuery(
+                                format("SELECT COUNT(*) FROM DBA_USERS WHERE USERNAME='%s'", config.getDatabaseUser().toUpperCase()))) {
+                    resultSet.next();
+                    return resultSet.getInt(1) == 1;
+                }
             }
         }
 
@@ -149,7 +161,8 @@ public enum DatabaseDialect {
 
         @Override
         public void resetPassword(Statement st, DatabaseAdminConfig databaseAdminConfig) throws SQLException {
-            st.execute(format("ALTER USER %s IDENTIFIED BY %s", databaseAdminConfig.getDatabaseUser(), databaseAdminConfig.getDatabasePassword()));
+            st.execute(format("ALTER USER %s IDENTIFIED BY %s", databaseAdminConfig.getDatabaseUser(),
+                    databaseAdminConfig.getDatabasePassword()));
         }
     };
 

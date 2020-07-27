@@ -43,13 +43,13 @@ public class CreateSchemaCommand {
     public void execute() throws SQLException {
         DatabaseDialect dialect = DatabaseDialect.resolveFor(databaseAdminConfig.getDatabaseVendor());
         if (dialect.schemaExists(databaseAdminConfig)) {
-            if(databaseAdminConfig.forcePasswordReset()){
+            if (databaseAdminConfig.forcePasswordReset()) {
                 try (Connection connection = dialect.connect(this.databaseAdminConfig)) {
                     Statement st = connection.createStatement();
                     dialect.resetPassword(st, this.databaseAdminConfig);
                 }
             }
-        }else{
+        } else {
             try (Connection connection = dialect.connect(this.databaseAdminConfig)) {
                 Statement st = connection.createStatement();
                 dialect.createUserAndSchema(st, this.databaseAdminConfig);

@@ -7,10 +7,10 @@ import java.io.CharArrayWriter;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
-
 import oracle.jdbc.pool.OracleDataSource;
 import org.junit.jupiter.api.Test;
 
@@ -105,13 +105,17 @@ public abstract class CreateOracleSchemaTestBase {
         try (Connection connection = DriverManager
                 .getConnection("jdbc:oracle:thin:@//" + getDatabaseServerHost() + ":" + getPort() + "/" + getDatabaseName(), "myschema",
                         "test123")) {
-            connection.prepareStatement("CREATE TABLE EXISTING.TEST_TABLE(ID NUMERIC )").execute();
-            fail();
-        } catch (SQLException e) {
-            CharArrayWriter caw = new CharArrayWriter();
-            e.printStackTrace(new PrintWriter(caw));
-            System.out.println(caw.toString());
-            assertTrue(caw.toString().toLowerCase().contains("insufficient privileges"));
+            PreparedStatement preparedStatement = connection.prepareStatement("CREATE TABLE EXISTING.TEST_TABLE(ID NUMERIC )");
+            try {
+                preparedStatement.execute();
+
+                fail();
+            } catch (SQLException e) {
+                CharArrayWriter caw = new CharArrayWriter();
+                e.printStackTrace(new PrintWriter(caw));
+                System.out.println(caw.toString());
+                assertTrue(caw.toString().toLowerCase().contains("insufficient privileges"));
+            }
         }
     }
 
@@ -161,6 +165,5 @@ public abstract class CreateOracleSchemaTestBase {
     protected abstract String getAdminUser();
 
     protected abstract String getDatabaseServerHost();
-
 
 }

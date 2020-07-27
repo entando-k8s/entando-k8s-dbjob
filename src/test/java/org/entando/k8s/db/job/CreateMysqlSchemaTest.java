@@ -6,15 +6,14 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import com.mysql.cj.jdbc.MysqlDataSource;
 import io.quarkus.runtime.StartupEvent;
-
 import java.io.CharArrayWriter;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
@@ -36,7 +35,8 @@ public class CreateMysqlSchemaTest {
         cmd.onStartup(new StartupEvent());
         //Then the new user will have access to his own schema to create database objects
         try (Connection connection = DriverManager
-                .getConnection("jdbc:mysql://" + getDatabaseServerHost() + ":" + getDatabaseServerPort() + "/myschema", "myschema", "test123")) {
+                .getConnection("jdbc:mysql://" + getDatabaseServerHost() + ":" + getDatabaseServerPort() + "/myschema", "myschema",
+                        "test123")) {
             connection.prepareStatement("CREATE TABLE TEST_TABLE(ID NUMERIC )").execute();
             connection.prepareStatement("TRUNCATE TEST_TABLE").execute();
             connection.prepareStatement("INSERT INTO myschema.TEST_TABLE (ID) VALUES (5)").execute();
@@ -81,7 +81,8 @@ public class CreateMysqlSchemaTest {
         CreateSchemaCommand cmd = new CreateSchemaCommand(new PropertiesBasedDatabaseAdminConfig(props));
         cmd.execute();
         try (Connection connection = DriverManager
-                .getConnection("jdbc:mysql://" + getDatabaseServerHost() + ":" + getDatabaseServerPort() + "/myschema", "myschema", password)) {
+                .getConnection("jdbc:mysql://" + getDatabaseServerHost() + ":" + getDatabaseServerPort() + "/myschema", "myschema",
+                        password)) {
             assertTrue(connection.prepareStatement("SELECT 1 FROM  DUAL").executeQuery().next());
         }
     }
@@ -150,15 +151,18 @@ public class CreateMysqlSchemaTest {
         cmd.execute();
         //Then the new user will not have access to create database objects in the existing schema
         try (Connection connection = DriverManager
-                .getConnection("jdbc:mysql://" + getDatabaseServerHost() + ":" + getDatabaseServerPort() +"/myschema", "myschema", "test123")) {
-            connection.prepareStatement("CREATE TABLE existing.TEST_TABLE(ID NUMERIC )").execute();
-            fail();
-        } catch (SQLException e) {
-            CharArrayWriter caw = new CharArrayWriter();
-            e.printStackTrace(new PrintWriter(caw));
-            System.out.println(caw.toString());
-            assertTrue(caw.toString().toLowerCase().contains("command denied"));
+                .getConnection("jdbc:mysql://" + getDatabaseServerHost() + ":" + getDatabaseServerPort() + "/myschema", "myschema",
+                        "test123")) {
+            PreparedStatement preparedStatement = connection.prepareStatement("CREATE TABLE existing.TEST_TABLE(ID NUMERIC )");
+            try {
+                preparedStatement.execute();
+                fail();
+            } catch (SQLException e) {
+                CharArrayWriter caw = new CharArrayWriter();
+                e.printStackTrace(new PrintWriter(caw));
+                System.out.println(caw.toString());
+                assertTrue(caw.toString().toLowerCase().contains("command denied"));
+            }
         }
     }
-
 }

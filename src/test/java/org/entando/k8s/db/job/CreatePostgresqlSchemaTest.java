@@ -8,10 +8,10 @@ import java.io.CharArrayWriter;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
@@ -33,7 +33,8 @@ public class CreatePostgresqlSchemaTest {
         cmd.execute();
         //Then the new user will have access to his own schema to create database objects
         try (Connection connection = DriverManager
-                .getConnection("jdbc:postgresql://" + getDatabaseServerHost() + ":" + getPort() + "/" + getDatabaseName(), "myschema", "test123")) {
+                .getConnection("jdbc:postgresql://" + getDatabaseServerHost() + ":" + getPort() + "/" + getDatabaseName(), "myschema",
+                        "test123")) {
             connection.prepareStatement("CREATE TABLE TEST_TABLE(ID NUMERIC )").execute();
             connection.prepareStatement("TRUNCATE TEST_TABLE").execute();
             connection.prepareStatement("INSERT INTO MYSCHEMA.TEST_TABLE (ID) VALUES (5)").execute();
@@ -46,11 +47,11 @@ public class CreatePostgresqlSchemaTest {
         CreateSchemaCommand cmd = new CreateSchemaCommand(new PropertiesBasedDatabaseAdminConfig(props));
         cmd.execute();
         try (Connection connection = DriverManager
-                .getConnection("jdbc:postgresql://" + getDatabaseServerHost() + ":" + getPort() + "/" + getDatabaseName(), "myschema", password)) {
+                .getConnection("jdbc:postgresql://" + getDatabaseServerHost() + ":" + getPort() + "/" + getDatabaseName(), "myschema",
+                        password)) {
             assertTrue(connection.prepareStatement("SELECT 1").executeQuery().next());
         }
     }
-
 
     @Test
     public void testDatasource() throws Exception {
@@ -114,6 +115,7 @@ public class CreatePostgresqlSchemaTest {
         //Expect a second attempt to create it not to fail, even though it already exists
         testCreate(props, "test123");
     }
+
     @Test
     public void testForcePasswordReset() throws Exception {
         //Given that a specific user/schema combination does not exist
@@ -151,14 +153,18 @@ public class CreatePostgresqlSchemaTest {
         cmd.execute();
         //Then the new user will not have access to create database objects in the existing schema
         try (Connection connection = DriverManager
-                .getConnection("jdbc:postgresql://" + getDatabaseServerHost() + ":" + getPort() + "/" + getDatabaseName(), "myschema", "test123")) {
-            connection.prepareStatement("CREATE TABLE EXISTING.TEST_TABLE(ID NUMERIC )").execute();
-            fail();
-        } catch (SQLException e) {
-            CharArrayWriter caw = new CharArrayWriter();
-            e.printStackTrace(new PrintWriter(caw));
-            System.out.println(caw.toString());
-            assertTrue(caw.toString().toLowerCase().contains("permission denied"));
+                .getConnection("jdbc:postgresql://" + getDatabaseServerHost() + ":" + getPort() + "/" + getDatabaseName(), "myschema",
+                        "test123")) {
+            PreparedStatement preparedStatement = connection.prepareStatement("CREATE TABLE EXISTING.TEST_TABLE(ID NUMERIC )");
+            try {
+                preparedStatement.execute();
+                fail();
+            } catch (SQLException e) {
+                CharArrayWriter caw = new CharArrayWriter();
+                e.printStackTrace(new PrintWriter(caw));
+                System.out.println(caw.toString());
+                assertTrue(caw.toString().toLowerCase().contains("permission denied"));
+            }
         }
     }
 
