@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.entando</groupId>
         <artifactId>entando-quarkus-parent</artifactId>
-        <version>6.1.7</version>
+        <version>6.1.8</version>
         <relativePath></relativePath>
     </parent>
     <artifactId>entando-k8s-dbjob</artifactId>
@@ -43,7 +43,6 @@
         <github.organization>entando-k8s</github.organization>
         <sonar.junit.reportPaths>target/surefire-reports</sonar.junit.reportPaths>
         <sonar.projectKey>${github.organization}_${project.artifactId}</sonar.projectKey>
-        <ojdbc8.version>19.3.0.0</ojdbc8.version>
     </properties>
     <dependencies>
         <dependency>
@@ -53,18 +52,14 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.oracle.ojdbc</groupId>
             <artifactId>ojdbc8</artifactId>
-            <version>${ojdbc8.version}</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
