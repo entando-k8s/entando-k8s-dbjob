@@ -1,8 +1,19 @@
-buildPack: maven-java
+buildPack: entando-maven-docker
 pipelineConfig:
   env:
     - name: PIPELINE_CODE
       value: dj
+    - name: TEST_DEPLOYMENT
+      value: "true"
+    - name: UPDATE_OWASP_DB
+      value: "false"
+    - name: ENTANDO_DOCKER_IMAGE_INFO_CONFIGMAP
+      value: "entando-docker-image-info-v6.1"
+    - name: EXECUTABLE_TYPE
+      valueFrom:
+        secretKeyRef:
+          name: entando-jx-common-secret
+          key: executable.type
     - name: MYSQL_ADMIN_PASSWORD
       valueFrom:
         secretKeyRef:
