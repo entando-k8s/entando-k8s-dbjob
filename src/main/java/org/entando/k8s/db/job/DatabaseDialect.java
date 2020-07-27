@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
@@ -29,7 +30,7 @@ public enum DatabaseDialect {
                         config.getDatabaseServerPort(),
                         config.getDatabaseUser(),
                         parameterSuffix(config.getJdbcParameters()));
-                DriverManager.getConnection(url, config.getDatabaseUser(), config.getDatabasePassword()).close();
+                DriverManager.getConnection(url, config.getDatabaseAdminUser(), config.getDatabaseAdminPassword()).close();
                 return true;
             } catch (SQLException e) {
                 return false;
@@ -52,6 +53,12 @@ public enum DatabaseDialect {
             swallow(() -> st.execute(format("DROP DATABASE IF EXISTS %s", config.getDatabaseUser())));
             swallow(() -> st.execute(format("DROP USER '%s'@'%%'", config.getDatabaseUser())));
         }
+
+        @Override
+        public void resetPassword(Statement st, DatabaseAdminConfig databaseAdminConfig) throws SQLException {
+            st.execute(format("ALTER USER %s IDENTIFIED BY '%s';", databaseAdminConfig.getDatabaseUser(),
+                    databaseAdminConfig.getDatabasePassword()));
+        }
     },
     POSTGRESQL() {
         @Override
@@ -71,12 +78,14 @@ public enum DatabaseDialect {
 
         @Override
         public boolean schemaExists(DatabaseAdminConfig config) throws SQLException {
-            try {
-                String url = buildUrl(config);
-                DriverManager.getConnection(url, config.getDatabaseUser(), config.getDatabasePassword()).close();
-                return true;
-            } catch (SQLException e) {
-                return false;
+            String url = buildUrl(config);
+            try (Connection connection = DriverManager
+                    .getConnection(url, config.getDatabaseAdminUser(), config.getDatabaseAdminPassword())) {
+                try (ResultSet resultSet = connection.createStatement()
+                        .executeQuery(format("SELECT COUNT(*) FROM PG_ROLES WHERE ROLNAME='%s'", config.getDatabaseUser()))) {
+                    resultSet.next();
+                    return resultSet.getInt(1) == 1;
+                }
             }
         }
 
@@ -94,6 +103,11 @@ public enum DatabaseDialect {
             swallow(() -> st.execute(format("DROP SCHEMA %s CASCADE", config.getDatabaseUser())));
             swallow(() -> st.execute(format("DROP USER %s", config.getDatabaseUser())));
         }
+
+        @Override
+        public void resetPassword(Statement st, DatabaseAdminConfig con) throws SQLException {
+            st.execute(format("ALTER USER %s WITH PASSWORD '%s'", con.getDatabaseUser(), con.getDatabasePassword()));
+        }
     },
     ORACLE() {
         @Override
@@ -104,12 +118,15 @@ public enum DatabaseDialect {
 
         @Override
         public boolean schemaExists(DatabaseAdminConfig config) throws SQLException {
-            try {
-                String url = buildUrl(config);
-                DriverManager.getConnection(url, config.getDatabaseUser(), config.getDatabasePassword()).close();
-                return true;
-            } catch (SQLException e) {
-                return false;
+            String url = buildUrl(config);
+            try (Connection connection = DriverManager
+                    .getConnection(url, config.getDatabaseAdminUser(), config.getDatabaseAdminPassword())) {
+                try (ResultSet resultSet = connection.createStatement()
+                        .executeQuery(
+                                format("SELECT COUNT(*) FROM DBA_USERS WHERE USERNAME='%s'", config.getDatabaseUser().toUpperCase()))) {
+                    resultSet.next();
+                    return resultSet.getInt(1) == 1;
+                }
             }
         }
 
@@ -122,7 +139,6 @@ public enum DatabaseDialect {
         }
 
         @Override
-
         public void createUserAndSchema(Statement statement, DatabaseAdminConfig config) throws SQLException {
             statement.execute(format("CREATE USER %s IDENTIFIED BY \"%s\"", config.getDatabaseUser(), config.getDatabasePassword()));
             String sql = format(
@@ -141,6 +157,12 @@ public enum DatabaseDialect {
         @Override
         public void dropUserAndSchema(Statement st, DatabaseAdminConfig config) {
             swallow(() -> st.execute(format("DROP USER %s CASCADE", config.getDatabaseUser())));
+        }
+
+        @Override
+        public void resetPassword(Statement st, DatabaseAdminConfig databaseAdminConfig) throws SQLException {
+            st.execute(format("ALTER USER %s IDENTIFIED BY %s", databaseAdminConfig.getDatabaseUser(),
+                    databaseAdminConfig.getDatabasePassword()));
         }
     };
 
@@ -171,6 +193,8 @@ public enum DatabaseDialect {
             return "?" + String.join("&", jdbcParameters);
         }
     }
+
+    public abstract void resetPassword(Statement st, DatabaseAdminConfig databaseAdminConfig) throws SQLException;
 
     private interface SqlAction {
 

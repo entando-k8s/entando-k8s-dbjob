@@ -8,6 +8,7 @@ import java.io.CharArrayWriter;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,7 +17,7 @@ import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 import org.postgresql.ds.PGConnectionPoolDataSource;
 
-@Tags(@Tag("in-process"))
+@Tags(@Tag("integration"))
 public class CreatePostgresqlSchemaTest {
 
     @Test
@@ -32,7 +33,8 @@ public class CreatePostgresqlSchemaTest {
         cmd.execute();
         //Then the new user will have access to his own schema to create database objects
         try (Connection connection = DriverManager
-                .getConnection("jdbc:postgresql://" + getDatabaseServerHost() + ":5432/" + getDatabaseName(), "myschema", "test123")) {
+                .getConnection("jdbc:postgresql://" + getDatabaseServerHost() + ":" + getPort() + "/" + getDatabaseName(), "myschema",
+                        "test123")) {
             connection.prepareStatement("CREATE TABLE TEST_TABLE(ID NUMERIC )").execute();
             connection.prepareStatement("TRUNCATE TEST_TABLE").execute();
             connection.prepareStatement("INSERT INTO MYSCHEMA.TEST_TABLE (ID) VALUES (5)").execute();
@@ -41,11 +43,12 @@ public class CreatePostgresqlSchemaTest {
         }
     }
 
-    private void testCreate(Map<String, String> props) throws SQLException {
+    private void testCreate(Map<String, String> props, String password) throws SQLException {
         CreateSchemaCommand cmd = new CreateSchemaCommand(new PropertiesBasedDatabaseAdminConfig(props));
         cmd.execute();
         try (Connection connection = DriverManager
-                .getConnection("jdbc:postgresql://" + getDatabaseServerHost() + ":5432/" + getDatabaseName(), "myschema", "test123")) {
+                .getConnection("jdbc:postgresql://" + getDatabaseServerHost() + ":" + getPort() + "/" + getDatabaseName(), "myschema",
+                        password)) {
             assertTrue(connection.prepareStatement("SELECT 1").executeQuery().next());
         }
     }
@@ -64,7 +67,7 @@ public class CreatePostgresqlSchemaTest {
         PGConnectionPoolDataSource ds = new PGConnectionPoolDataSource();
         ds.setServerName(getDatabaseServerHost());
         ds.setDatabaseName(getDatabaseName());
-        ds.setPortNumber(5432);
+        ds.setPortNumber(Integer.valueOf(getPort()));
         //Then the new user will have access to his own schema to create database objects
         try (Connection connection = ds.getConnection("myschema", "test123")) {
             connection.prepareStatement("CREATE TABLE TEST_TABLE(ID NUMERIC )").execute();
@@ -85,7 +88,7 @@ public class CreatePostgresqlSchemaTest {
         props.put("DATABASE_ADMIN_USER", TestConfigProperty.POSTGRESQL_ADMIN_USER.resolve());
         props.put("DATABASE_ADMIN_PASSWORD", TestConfigProperty.POSTGRESQL_ADMIN_PASSWORD.resolve());
         props.put("DATABASE_SERVER_HOST", getDatabaseServerHost());
-        props.put("DATABASE_SERVER_PORT", "5432");
+        props.put("DATABASE_SERVER_PORT", "" + getPort() + "");
         props.put("DATABASE_VENDOR", "postgresql");
         props.put("DATABASE_NAME", getDatabaseName());
         return props;
@@ -93,6 +96,10 @@ public class CreatePostgresqlSchemaTest {
 
     private String getDatabaseServerHost() {
         return ofNullable(System.getenv("EXTERNAL_POSTGRESQL_SERVICE_HOST")).orElse("localhost");
+    }
+
+    private String getPort() {
+        return ofNullable(System.getenv("EXTERNAL_POSTGRESQL_SERVICE_PORT")).orElse("5432");
     }
 
     @Test
@@ -104,9 +111,27 @@ public class CreatePostgresqlSchemaTest {
         CreateSchemaCommand cmd = new CreateSchemaCommand(new PropertiesBasedDatabaseAdminConfig(props));
         cmd.undo();
         //But is then created
-        testCreate(props);
+        testCreate(props, "test123");
         //Expect a second attempt to create it not to fail, even though it already exists
-        testCreate(props);
+        testCreate(props, "test123");
+    }
+
+    @Test
+    public void testForcePasswordReset() throws Exception {
+        //Given that a specific user/schema combination does not exist
+        Map<String, String> props = getBaseProperties();
+        props.put("DATABASE_USER", "myschema");
+        props.put("DATABASE_PASSWORD", "test123");
+        CreateSchemaCommand cmd = new CreateSchemaCommand(new PropertiesBasedDatabaseAdminConfig(props));
+        cmd.undo();
+        //But then it is created
+        testCreate(props, "test123");
+        //And we enabled password resets
+        props.put("FORCE_PASSWORD_RESET", "true");
+        //When it is recreated with a different password
+        props.put("DATABASE_PASSWORD", "test456");
+        //Expect  a second attempt not to fail, even though it doesn't change
+        testCreate(props, "test456");
     }
 
     @Test
@@ -128,14 +153,18 @@ public class CreatePostgresqlSchemaTest {
         cmd.execute();
         //Then the new user will not have access to create database objects in the existing schema
         try (Connection connection = DriverManager
-                .getConnection("jdbc:postgresql://" + getDatabaseServerHost() + ":5432/" + getDatabaseName(), "myschema", "test123")) {
-            connection.prepareStatement("CREATE TABLE EXISTING.TEST_TABLE(ID NUMERIC )").execute();
-            fail();
-        } catch (SQLException e) {
-            CharArrayWriter caw = new CharArrayWriter();
-            e.printStackTrace(new PrintWriter(caw));
-            System.out.println(caw.toString());
-            assertTrue(caw.toString().toLowerCase().contains("permission denied"));
+                .getConnection("jdbc:postgresql://" + getDatabaseServerHost() + ":" + getPort() + "/" + getDatabaseName(), "myschema",
+                        "test123")) {
+            PreparedStatement preparedStatement = connection.prepareStatement("CREATE TABLE EXISTING.TEST_TABLE(ID NUMERIC )");
+            try {
+                preparedStatement.execute();
+                fail();
+            } catch (SQLException e) {
+                CharArrayWriter caw = new CharArrayWriter();
+                e.printStackTrace(new PrintWriter(caw));
+                System.out.println(caw.toString());
+                assertTrue(caw.toString().toLowerCase().contains("permission denied"));
+            }
         }
     }
 
