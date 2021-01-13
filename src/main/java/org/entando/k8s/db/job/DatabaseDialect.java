@@ -22,6 +22,7 @@ public enum DatabaseDialect {
                     parameterSuffix(config.getJdbcParameters()));
             return DriverManager.getConnection(url, config.getDatabaseUser(), config.getDatabasePassword());
         }
+
         @Override
         public Connection connectAsAdmin(DatabaseAdminConfig config) throws SQLException {
             String url = format("jdbc:mysql://%s:%s%s",
@@ -128,6 +129,7 @@ public enum DatabaseDialect {
             String url = buildUrl(config);
             return DriverManager.getConnection(url, config.getDatabaseUser(), config.getDatabasePassword());
         }
+
         @Override
         public Connection connectAsAdmin(DatabaseAdminConfig config) throws SQLException {
             String url = buildUrl(config);
@@ -195,6 +197,7 @@ public enum DatabaseDialect {
             Logger.getAnonymousLogger().log(Level.WARNING, "Exception ignored.", e);
         }
     }
+
     public abstract Connection connectAsUser(DatabaseAdminConfig config) throws SQLException;
 
     public abstract Connection connectAsAdmin(DatabaseAdminConfig config) throws SQLException;
