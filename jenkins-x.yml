@@ -62,9 +62,9 @@ pipelineConfig:
         secretKeyRef:
           name: entando-jx-common-secret
           key: oracle12.database.name
-    - name: EXTERNAL_ORACLE12_SERVICE_HOST
+    - name: EXTERNAL_ORACLE_SERVICE_HOST
       value: oracle12c.oracle-test.svc.cluster.local
-    - name: EXTERNAL_ORACLE12_SERVICE_PORT
+    - name: EXTERNAL_ORACLE_SERVICE_PORT
       value: "1521"
     - name: POSTGRESQL_ADMIN_USER
       valueFrom:
