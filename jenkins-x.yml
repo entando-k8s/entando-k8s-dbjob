@@ -19,6 +19,10 @@ pipelineConfig:
         secretKeyRef:
           name: entando-jx-common-secret
           key: mysql.admin.password
+    - name: EXTERNAL_MYSQL_SERVICE_HOST
+      value: mysql.oracle-test.svc.cluster.local
+    - name: EXTERNAL_MYSQL_SERVICE_PORT
+      value: "3306"
     - name: MYSQL_ADMIN_USER
       valueFrom:
         secretKeyRef:
@@ -39,6 +43,10 @@ pipelineConfig:
         secretKeyRef:
           name: entando-jx-common-secret
           key: oracle11.database.name
+    - name: EXTERNAL_ORACLE11_SERVICE_HOST
+      value: oracle11g.oracle-test.svc.cluster.local
+    - name: EXTERNAL_ORACLE11_SERVICE_PORT
+      value: "1521"
     - name: ORACLE12_ADMIN_USER
       valueFrom:
         secretKeyRef:
@@ -54,6 +62,10 @@ pipelineConfig:
         secretKeyRef:
           name: entando-jx-common-secret
           key: oracle12.database.name
+    - name: EXTERNAL_ORACLE12_SERVICE_HOST
+      value: oracle12c.oracle-test.svc.cluster.local
+    - name: EXTERNAL_ORACLE12_SERVICE_PORT
+      value: "1521"
     - name: POSTGRESQL_ADMIN_USER
       valueFrom:
         secretKeyRef:
@@ -69,6 +81,10 @@ pipelineConfig:
         secretKeyRef:
           name: entando-jx-common-secret
           key: postgresql.database.name
+    - name: EXTERNAL_POSTGRESQL_SERVICE_HOST
+      value: postgresql.oracle-test.svc.cluster.local
+    - name: EXTERNAL_POSTGRESQL_SERVICE_PORT
+      value: "5432"
   pipelines:
     release:
       promote:
