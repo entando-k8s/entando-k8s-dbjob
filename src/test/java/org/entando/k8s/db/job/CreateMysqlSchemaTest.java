@@ -19,10 +19,10 @@ import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
 @Tags(@Tag("integration"))
-public class CreateMysqlSchemaTest {
+class CreateMysqlSchemaTest {
 
     @Test
-    public void testSimpleCreate() throws Exception {
+    void testSimpleCreate() throws Exception {
         //Given I have admin rights and connectivity to a database
         Map<String, String> props = getBaseProperties();
         //And I specify a database user and password for which no schema exists yet
@@ -46,7 +46,7 @@ public class CreateMysqlSchemaTest {
     }
 
     @Test
-    public void testIdempotent() throws Exception {
+    void testIdempotent() throws Exception {
         //Given that a specific user/schema combination does not exist
         Map<String, String> props = getBaseProperties();
         props.put("DATABASE_USER", "myschema");
@@ -60,7 +60,7 @@ public class CreateMysqlSchemaTest {
     }
 
     @Test
-    public void testForcePasswordReset() throws Exception {
+    void testForcePasswordReset() throws Exception {
         //Given that a specific user/schema combination does not exist
         Map<String, String> props = getBaseProperties();
         props.put("DATABASE_USER", "myschema");
@@ -88,7 +88,7 @@ public class CreateMysqlSchemaTest {
     }
 
     @Test
-    public void testDatasource() throws Exception {
+    void testDatasource() throws Exception {
         //Given I have admin rights and connectivity to a database
         Map<String, String> props = getBaseProperties();
         //And I specify a database user and password for which no schema exists yet
@@ -133,7 +133,7 @@ public class CreateMysqlSchemaTest {
     }
 
     @Test
-    public void testSingleAccess() throws Exception {
+    void testSingleAccess() throws Exception {
         //Given I have admin rights and connectivity to a database
         Map<String, String> props = getBaseProperties();
         //And the database has an existing schema

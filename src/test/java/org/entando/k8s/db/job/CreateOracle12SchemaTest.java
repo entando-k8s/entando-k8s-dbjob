@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Tags;
 
 @Tags(@Tag("integration"))
-public class CreateOracle12SchemaTest extends CreateOracleSchemaTestBase {
+class CreateOracle12SchemaTest extends CreateOracleSchemaTestBase {
 
     @Override
     protected String getPort() {

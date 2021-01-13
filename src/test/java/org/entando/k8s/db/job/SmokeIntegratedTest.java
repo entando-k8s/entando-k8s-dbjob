@@ -29,20 +29,20 @@ import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
 @Tags(@Tag("end-to-end"))
-public class SmokeIntegratedTest {
+class SmokeIntegratedTest {
 
-    public static final String ADMIN_USER = "postgres";
-    public static final String ADMIN_PASSWORD = "postgres";
-    public static final String PORT = "5432";
-    public static final String DATABASE_NAME = "testdb";
-    public static final String MYSCHEMA = "myschema";
-    public static final String MYPASSWORD = "mypassword";
+    static final String ADMIN_USER = "postgres";
+    static final String ADMIN_PASSWORD = "postgres";
+    static final String PORT = "5432";
+    static final String DATABASE_NAME = "testdb";
+    static final String MYSCHEMA = "myschema";
+    static final String MYPASSWORD = "mypassword";
     private static final String NAMESPACE = EntandoOperatorTestConfig.calculateNameSpace("dbjob-ns");
-    public static final String LOCAL_SERVICE_NAME = NAMESPACE + "-pg-service";
+    static final String LOCAL_SERVICE_NAME = NAMESPACE + "-pg-service";
     KubernetesClient client = new DefaultKubernetesClient();
 
     @BeforeEach
-    public void cleanNamespace() {
+    void cleanNamespace() {
         if (client.namespaces().withName(NAMESPACE).get() == null) {
             client.namespaces().createNew().withNewMetadata().withName(NAMESPACE).endMetadata().done();
         } else {
@@ -67,7 +67,7 @@ public class SmokeIntegratedTest {
     }
 
     @Test
-    public void testPostgresql() throws SQLException {
+    void testPostgresql() throws SQLException {
         //Given I have a PG Database available on a given IP address
         String ip = preparePgDb();
         //When I run the DBSchemaJob image against that IP
