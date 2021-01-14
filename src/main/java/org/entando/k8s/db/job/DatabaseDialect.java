@@ -51,10 +51,13 @@ public enum DatabaseDialect {
         public void createUserAndSchema(Statement statement, DatabaseAdminConfig config) throws SQLException {
             statement.execute(format("CREATE DATABASE  %s", config.getDatabaseUser()));
             statement.execute(
-                    format("GRANT ALL PRIVILEGES  ON %s.*  TO '%s'@'%%' IDENTIFIED BY '%s'  WITH GRANT OPTION;",
-                            config.getDatabaseUser(),
+                    format("CREATE USER '%s'@'%%' IDENTIFIED BY '%s';",
                             config.getDatabaseUser(),
                             config.getDatabasePassword()));
+            statement.execute(
+                    format("GRANT ALL PRIVILEGES ON %s.*  TO '%s'@'%%' WITH GRANT OPTION;",
+                            config.getDatabaseUser(),
+                            config.getDatabaseUser()));
         }
 
         @Override
