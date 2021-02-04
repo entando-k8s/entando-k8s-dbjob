@@ -42,24 +42,45 @@ public class CreateSchemaCommand {
 
     public void execute() throws SQLException {
         DatabaseDialect dialect = DatabaseDialect.resolveFor(databaseAdminConfig.getDatabaseVendor());
-        if (dialect.schemaExists(databaseAdminConfig)) {
-            if (databaseAdminConfig.forcePasswordReset()) {
-                try (Connection connection = dialect.connect(this.databaseAdminConfig)) {
-                    Statement st = connection.createStatement();
-                    dialect.resetPassword(st, this.databaseAdminConfig);
+        if (!userCredentialsValid(dialect)) {
+            if (dialect.schemaExists(databaseAdminConfig)) {
+                if (databaseAdminConfig.forcePasswordReset()) {
+                    resetPassword(dialect);
                 }
+            } else {
+                createNewUser(dialect);
             }
-        } else {
-            try (Connection connection = dialect.connect(this.databaseAdminConfig)) {
-                Statement st = connection.createStatement();
-                dialect.createUserAndSchema(st, this.databaseAdminConfig);
-            }
+        }
+    }
+
+    private void createNewUser(DatabaseDialect dialect) throws SQLException {
+        try (Connection connection = dialect.connectAsAdmin(this.databaseAdminConfig)) {
+            Statement st = connection.createStatement();
+            dialect.createUserAndSchema(st, this.databaseAdminConfig);
+        }
+    }
+
+    private void resetPassword(DatabaseDialect dialect) throws SQLException {
+        try (Connection connection = dialect.connectAsAdmin(this.databaseAdminConfig)) {
+            Statement st = connection.createStatement();
+            dialect.resetPassword(st, this.databaseAdminConfig);
+        }
+    }
+
+    private boolean userCredentialsValid(DatabaseDialect dialect) {
+        try {
+            Connection connection = dialect.connectAsUser(databaseAdminConfig);
+            boolean valid = connection.isValid(5000);
+            connection.close();
+            return valid;
+        } catch (SQLException e) {
+            return false;
         }
     }
 
     public void undo() throws SQLException {
         DatabaseDialect dialect = DatabaseDialect.resolveFor(databaseAdminConfig.getDatabaseVendor());
-        try (Connection connection = dialect.connect(this.databaseAdminConfig)) {
+        try (Connection connection = dialect.connectAsAdmin(this.databaseAdminConfig)) {
             Statement st = connection.createStatement();
             dialect.dropUserAndSchema(st, this.databaseAdminConfig);
         }

@@ -14,7 +14,17 @@ import java.util.logging.Logger;
 public enum DatabaseDialect {
     MYSQL() {
         @Override
-        public Connection connect(DatabaseAdminConfig config) throws SQLException {
+        public Connection connectAsUser(DatabaseAdminConfig config) throws SQLException {
+            String url = format("jdbc:mysql://%s:%s/%s%s",
+                    config.getDatabaseServerHost(),
+                    config.getDatabaseServerPort(),
+                    config.getDatabaseUser(),
+                    parameterSuffix(config.getJdbcParameters()));
+            return DriverManager.getConnection(url, config.getDatabaseUser(), config.getDatabasePassword());
+        }
+
+        @Override
+        public Connection connectAsAdmin(DatabaseAdminConfig config) throws SQLException {
             String url = format("jdbc:mysql://%s:%s%s",
                     config.getDatabaseServerHost(),
                     config.getDatabaseServerPort(),
@@ -38,14 +48,16 @@ public enum DatabaseDialect {
         }
 
         @Override
-
         public void createUserAndSchema(Statement statement, DatabaseAdminConfig config) throws SQLException {
             statement.execute(format("CREATE DATABASE  %s", config.getDatabaseUser()));
             statement.execute(
-                    format("GRANT ALL PRIVILEGES  ON %s.*  TO '%s'@'%%' IDENTIFIED BY '%s'  WITH GRANT OPTION;",
-                            config.getDatabaseUser(),
+                    format("CREATE USER '%s'@'%%' IDENTIFIED BY '%s';",
                             config.getDatabaseUser(),
                             config.getDatabasePassword()));
+            statement.execute(
+                    format("GRANT ALL PRIVILEGES ON %s.*  TO '%s'@'%%' WITH GRANT OPTION;",
+                            config.getDatabaseUser(),
+                            config.getDatabaseUser()));
         }
 
         @Override
@@ -62,7 +74,12 @@ public enum DatabaseDialect {
     },
     POSTGRESQL() {
         @Override
-        public Connection connect(DatabaseAdminConfig config) throws SQLException {
+        public Connection connectAsUser(DatabaseAdminConfig config) throws SQLException {
+            String url = buildUrl(config);
+            return DriverManager.getConnection(url, config.getDatabaseUser(), config.getDatabasePassword());
+        }
+
+        public Connection connectAsAdmin(DatabaseAdminConfig config) throws SQLException {
             String url = buildUrl(config);
             return DriverManager.getConnection(url, config.getDatabaseAdminUser(), config.getDatabaseAdminPassword());
         }
@@ -111,7 +128,13 @@ public enum DatabaseDialect {
     },
     ORACLE() {
         @Override
-        public Connection connect(DatabaseAdminConfig config) throws SQLException {
+        public Connection connectAsUser(DatabaseAdminConfig config) throws SQLException {
+            String url = buildUrl(config);
+            return DriverManager.getConnection(url, config.getDatabaseUser(), config.getDatabasePassword());
+        }
+
+        @Override
+        public Connection connectAsAdmin(DatabaseAdminConfig config) throws SQLException {
             String url = buildUrl(config);
             return DriverManager.getConnection(url, config.getDatabaseAdminUser(), config.getDatabaseAdminPassword());
         }
@@ -178,7 +201,9 @@ public enum DatabaseDialect {
         }
     }
 
-    public abstract Connection connect(DatabaseAdminConfig config) throws SQLException;
+    public abstract Connection connectAsUser(DatabaseAdminConfig config) throws SQLException;
+
+    public abstract Connection connectAsAdmin(DatabaseAdminConfig config) throws SQLException;
 
     public abstract boolean schemaExists(DatabaseAdminConfig config) throws SQLException;
 

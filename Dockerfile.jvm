@@ -1,6 +1,17 @@
-FROM fabric8/java-alpine-openjdk8-jre
-ENV JAVA_OPTIONS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
+FROM entando/entando-ubi8-java11-base:6.3.0
+ARG VERSION
+LABEL name="Entando K8S DB Job" \
+      vendor="Entando" \
+      version="v${VERSION}" \
+      release="6" \
+      summary="This container creates database schemas and matching users." \
+      description="This is a run-to-completion container. It will create a database schema and a matching user \
+                   using the previously created schema as a default schema for the user in question. \
+                   In the case of MySQL, it creates a database instead of a schema. \
+                   This process is idempotent. The container will only create a schema if it doesn't yet exist."
+ENV JAVA_OPTIONS="-Djava.util.logging.manager=org.jboss.logmanager.LogManager"
 ENV AB_ENABLED=jmx_exporter
+COPY target/generated-resources/licenses /licenses
 COPY target/lib/* /deployments/lib/
 COPY target/*-runner.jar /deployments/app.jar
 ENTRYPOINT [ "/deployments/run-java.sh" ]

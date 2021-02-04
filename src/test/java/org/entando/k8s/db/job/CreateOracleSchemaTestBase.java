@@ -14,10 +14,10 @@ import java.util.Map;
 import oracle.jdbc.pool.OracleDataSource;
 import org.junit.jupiter.api.Test;
 
-public abstract class CreateOracleSchemaTestBase {
+abstract class CreateOracleSchemaTestBase {
 
     @Test
-    public void simpleCreate() throws Exception {
+    void simpleCreate() throws Exception {
         //Given I have admin rights and connectivity to a database
         Map<String, String> props = getBaseProperties();
         //And I specify a database user and password for which no schema exists yet
@@ -41,7 +41,7 @@ public abstract class CreateOracleSchemaTestBase {
     }
 
     @Test
-    public void testForcePasswordReset() throws Exception {
+    void testForcePasswordReset() throws Exception {
         Map<String, String> props = getBaseProperties();
         props.put("DATABASE_USER", "myschema");
         props.put("DATABASE_PASSWORD", "test123");
@@ -57,7 +57,7 @@ public abstract class CreateOracleSchemaTestBase {
     }
 
     @Test
-    public void testDatasource() throws Exception {
+    void testDatasource() throws Exception {
         //Given I have admin rights and connectivity to a database
         Map<String, String> props = getBaseProperties();
         //And I specify a database user and password for which no schema exists yet
@@ -85,7 +85,7 @@ public abstract class CreateOracleSchemaTestBase {
     protected abstract void setDatabaseServiceName(OracleDataSource ds);
 
     @Test
-    public void singleAccess() throws Exception {
+    void singleAccess() throws Exception {
         //Given I have admin rights and connectivity to a database
         Map<String, String> props = getBaseProperties();
         //And the database has an existing schema
@@ -120,7 +120,7 @@ public abstract class CreateOracleSchemaTestBase {
     }
 
     @Test
-    public void testIdempotent() throws Exception {
+    void testIdempotent() throws Exception {
         Map<String, String> props = getBaseProperties();
         props.put("DATABASE_USER", "myschema");
         props.put("DATABASE_PASSWORD", "test123");
