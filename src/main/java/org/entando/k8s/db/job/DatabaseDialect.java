@@ -58,8 +58,9 @@ public enum DatabaseDialect {
                     format("GRANT ALL PRIVILEGES ON %s.*  TO '%s'@'%%' WITH GRANT OPTION;",
                             config.getDatabaseUser(),
                             config.getDatabaseUser()));
-            if(statement.getConnection().getMetaData().getDatabaseMajorVersion()>=8) {
-                //See https://stackoverflow.com/questions/56831529/configuring-a-xa-datasource-to-mysql-8-db-with-spring-boot-and-bitronix-jta-mana
+            if (statement.getConnection().getMetaData().getDatabaseMajorVersion() >= 8) {
+                //See https://stackoverflow.com/questions/56831529/configuring-a-xa-datasource-to-mysql-8-db-with-spring-boot-and
+                // -bitronix-jta-mana
                 statement.execute(
                         format("GRANT XA_RECOVER_ADMIN ON *.* TO '%s'@'%%';",
                                 config.getDatabaseUser()));
