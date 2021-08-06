@@ -3,10 +3,12 @@ package org.entando.k8s.db.job;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.EndpointsBuilder;
 import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.Namespace;
+import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
@@ -19,10 +21,12 @@ import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.entando.kubernetes.controller.EntandoImageResolver;
-import org.entando.kubernetes.controller.integrationtest.podwaiters.JobPodWaiter;
-import org.entando.kubernetes.controller.integrationtest.podwaiters.ServicePodWaiter;
-import org.entando.kubernetes.controller.integrationtest.support.EntandoOperatorTestConfig;
+import org.entando.kubernetes.controller.spi.common.PodResult;
+import org.entando.kubernetes.controller.spi.common.PodResult.State;
+import org.entando.kubernetes.controller.support.client.impl.DefaultEntandoResourceClient;
+import org.entando.kubernetes.controller.support.client.impl.DefaultPodClient;
+import org.entando.kubernetes.controller.support.client.impl.EntandoOperatorTestConfig;
+import org.entando.kubernetes.controller.support.common.EntandoImageResolver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Tags;
@@ -44,7 +48,7 @@ class SmokeIntegratedTest {
     @BeforeEach
     void cleanNamespace() {
         if (client.namespaces().withName(NAMESPACE).get() == null) {
-            client.namespaces().createNew().withNewMetadata().withName(NAMESPACE).endMetadata().done();
+            client.namespaces().create(new NamespaceBuilder().withNewMetadata().withName(NAMESPACE).endMetadata().build());
         } else {
             client.pods().inNamespace(NAMESPACE).delete();
             await().atMost(2, TimeUnit.MINUTES).until(() -> client.pods().inNamespace(NAMESPACE).list().getItems().isEmpty());
@@ -67,7 +71,7 @@ class SmokeIntegratedTest {
     }
 
     @Test
-    void testPostgresql() throws SQLException {
+    void testPostgresql() throws SQLException, InterruptedException {
         //Given I have a PG Database available on a given IP address
         String ip = preparePgDb();
         //When I run the DBSchemaJob image against that IP
@@ -123,8 +127,8 @@ class SmokeIntegratedTest {
                 .getConnection("jdbc:postgresql://" + service.getSpec().getClusterIP() + ":5432/" + DATABASE_NAME, MYSCHEMA, MYPASSWORD);
     }
 
-    private void runDbSchemaJobAgainst(String ip) {
-        client.pods().inNamespace(NAMESPACE).createNew().withNewMetadata().withName("dbjob")
+    private void runDbSchemaJobAgainst(String ip) throws InterruptedException {
+        client.pods().inNamespace(NAMESPACE).create(new PodBuilder().withNewMetadata().withName("dbjob")
                 .endMetadata()
                 .withNewSpec()
                 .withRestartPolicy("Never")
@@ -140,19 +144,18 @@ class SmokeIntegratedTest {
                         new EnvVar("DATABASE_PASSWORD", MYPASSWORD, null),
                         new EnvVar("DATABASE_VENDOR", "postgresql", null)
                 )
-                .endContainer().endSpec().done();
-        PodResource<Pod, DoneablePod> job = client.pods().inNamespace(NAMESPACE).withName("dbjob");
-        new JobPodWaiter().limitCompletionTo(Duration.ofSeconds(60)).throwException(RuntimeException.class)
-                .waitOn(job);
+                .endContainer().endSpec().build());
+        PodResource<Pod> job = client.pods().inNamespace(NAMESPACE).withName("dbjob");
+        job.waitUntilCondition(pod -> pod.getStatus() != null && PodResult.of(pod).getState() == State.COMPLETED, 3, TimeUnit.MINUTES);
     }
 
     private String resolveImage() {
-        return new EntandoImageResolver(null).determineImageUri("entando/entando-k8s-dbjob",
-                EntandoOperatorTestConfig.getVersionOfImageUnderTest());
+        return new EntandoImageResolver(null).determineImageUri("entando/entando-k8s-dbjob:"
+                + EntandoOperatorTestConfig.getVersionOfImageUnderTest().orElse("0.0.0-SNAPSHOT-LOCAL-BUILD"));
     }
 
-    private String preparePgDb() {
-        client.pods().inNamespace(NAMESPACE).createNew().withNewMetadata().withName("pg-test")
+    private String preparePgDb() throws InterruptedException {
+        client.pods().inNamespace(NAMESPACE).create(new PodBuilder().withNewMetadata().withName("pg-test")
                 .endMetadata()
                 .withNewSpec().addNewContainer()
                 .withName("pg-container")
@@ -167,10 +170,9 @@ class SmokeIntegratedTest {
                         new EnvVar("POSTGRESQL_PASSWORD", "notused", null),
                         new EnvVar("POSTGRESQL_DATABASE", "testdb", null),
                         new EnvVar("POSTGRESQL_ADMIN_PASSWORD", "postgres", null))
-                .endContainer().endSpec().done();
-        PodResource<Pod, DoneablePod> podResource = client.pods().inNamespace(NAMESPACE).withName("pg-test");
-        new ServicePodWaiter().limitReadinessTo(Duration.ofSeconds(60)).throwException(RuntimeException.class)
-                .waitOn(podResource);
+                .endContainer().endSpec().build());
+        PodResource<Pod> podResource = client.pods().inNamespace(NAMESPACE).withName("pg-test");
+        podResource.waitUntilCondition(pod -> pod.getStatus() != null && PodResult.of(pod).getState() == State.READY, 3, TimeUnit.MINUTES);
         return podResource.fromServer().get().getStatus().getPodIP();
 
     }
