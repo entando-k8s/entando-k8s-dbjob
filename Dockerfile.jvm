@@ -12,6 +12,5 @@ LABEL name="Entando K8S DB Job" \
 ENV JAVA_OPTIONS="-Djava.util.logging.manager=org.jboss.logmanager.LogManager"
 ENV AB_ENABLED=jmx_exporter
 COPY target/generated-resources/licenses /licenses
-COPY target/lib/* /deployments/lib/
-COPY target/*-runner.jar /deployments/app.jar
+COPY target/quarkus-app/ /deployments/
 ENTRYPOINT [ "/deployments/run-java.sh" ]
