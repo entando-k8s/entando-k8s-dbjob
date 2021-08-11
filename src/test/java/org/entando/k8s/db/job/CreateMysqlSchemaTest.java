@@ -32,7 +32,7 @@ class CreateMysqlSchemaTest {
         CreateSchemaCommand cmd = new CreateSchemaCommand(new PropertiesBasedDatabaseAdminConfig(props));
         cmd.undo();
         //When I perform the CreateSchema command
-        cmd.onStartup(new StartupEvent());
+        cmd.run();
         //Then the new user will have access to his own schema to create database objects
         try (Connection connection = DriverManager
                 .getConnection("jdbc:mysql://" + getDatabaseServerHost() + ":" + getDatabaseServerPort() + "/myschema", "myschema",
