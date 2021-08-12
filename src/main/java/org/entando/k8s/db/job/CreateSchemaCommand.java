@@ -1,25 +1,22 @@
 package org.entando.k8s.db.job;
 
-import io.quarkus.runtime.StartupEvent;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Observes;
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
 
 @ApplicationScoped
-public class CreateSchemaCommand {
+@CommandLine.Command()
+public class CreateSchemaCommand implements Runnable {
 
     private static final Logger LOGGER = Logger.getLogger(CreateSchemaCommand.class.getName());
-    private DatabaseAdminConfig databaseAdminConfig;
-    private int status = 0;
-    private Runnable autoExit = () -> {
-    };
+    private final DatabaseAdminConfig databaseAdminConfig;
 
     public CreateSchemaCommand() {
-        autoExit = () -> System.exit(status);
         this.databaseAdminConfig = new PropertiesBasedDatabaseAdminConfig(System.getenv());
     }
 
@@ -27,16 +24,15 @@ public class CreateSchemaCommand {
         this.databaseAdminConfig = databaseAdminConfig;
     }
 
-    public void onStartup(@Observes StartupEvent startupEvent) {
+    public void run() {
         LOGGER.severe("onStartup");
         try {
             execute();
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Schema creation failed.", e);
-            status = -1;
+            throw new CommandLine.ExecutionException(new CommandLine(this), e.getMessage());
         } finally {
             LOGGER.severe("onStartup:finally");
-            new Thread(autoExit).start();
         }
     }
 
