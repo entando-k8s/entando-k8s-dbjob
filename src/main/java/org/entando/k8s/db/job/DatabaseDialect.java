@@ -55,7 +55,7 @@ public enum DatabaseDialect {
                             config.getDatabaseUser(),
                             config.getDatabasePassword()));
             statement.execute(
-                    format("GRANT ALL PRIVILEGES ON %s.*  TO '%s'@'%%' WITH GRANT OPTION;",
+                    format("GRANT ALL PRIVILEGES ON %s.* TO '%s'@'%%' WITH GRANT OPTION;",
                             config.getDatabaseUser(),
                             config.getDatabaseUser()));
             if (statement.getConnection().getMetaData().getDatabaseMajorVersion() >= 8) {
@@ -114,23 +114,22 @@ public enum DatabaseDialect {
         }
 
         @Override
-
         public void createUserAndSchema(Statement statement, DatabaseAdminConfig config) throws SQLException {
-            statement.execute(format("CREATE USER %s WITH PASSWORD '%s'", config.getDatabaseUser(), config.getDatabasePassword()));
-            statement.execute(format("GRANT %s TO %s", config.getDatabaseUser(), config.getDatabaseAdminUser()));
-            statement.execute(format("CREATE SCHEMA %s AUTHORIZATION %s", config.getDatabaseUser(), config.getDatabaseUser()));
-            statement.execute(format("ALTER ROLE %s SET search_path =  %s ", config.getDatabaseUser(), config.getDatabaseUser()));
+            statement.execute(format("CREATE USER \"%s\" WITH PASSWORD '%s'", config.getDatabaseUser(), config.getDatabasePassword()));
+            statement.execute(format("GRANT \"%s\" TO \"%s\"", config.getDatabaseUser(), config.getDatabaseAdminUser()));
+            statement.execute(format("CREATE SCHEMA \"%s\" AUTHORIZATION \"%s\"", config.getDatabaseUser(), config.getDatabaseUser()));
+            statement.execute(format("ALTER ROLE \"%s\" SET search_path = \"%s\"", config.getDatabaseUser(), config.getDatabaseUser()));
         }
 
         @Override
         public void dropUserAndSchema(Statement st, DatabaseAdminConfig config) {
-            swallow(() -> st.execute(format("DROP SCHEMA %s CASCADE", config.getDatabaseUser())));
-            swallow(() -> st.execute(format("DROP USER %s", config.getDatabaseUser())));
+            swallow(() -> st.execute(format("DROP SCHEMA \"%s\" CASCADE", config.getDatabaseUser())));
+            swallow(() -> st.execute(format("DROP USER \"%s\"", config.getDatabaseUser())));
         }
 
         @Override
         public void resetPassword(Statement st, DatabaseAdminConfig con) throws SQLException {
-            st.execute(format("ALTER USER %s WITH PASSWORD '%s'", con.getDatabaseUser(), con.getDatabasePassword()));
+            st.execute(format("ALTER USER \"%s\" WITH PASSWORD '%s'", con.getDatabaseUser(), con.getDatabasePassword()));
         }
     },
     ORACLE() {
