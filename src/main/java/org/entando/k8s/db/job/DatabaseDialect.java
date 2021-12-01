@@ -12,6 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public enum DatabaseDialect {
+
     MYSQL() {
         @Override
         public Connection connectAsUser(DatabaseAdminConfig config) throws SQLException {
@@ -115,21 +116,30 @@ public enum DatabaseDialect {
 
         @Override
         public void createUserAndSchema(Statement statement, DatabaseAdminConfig config) throws SQLException {
-            statement.execute(format("CREATE USER \"%s\" WITH PASSWORD '%s'", config.getDatabaseUser(), config.getDatabasePassword()));
-            statement.execute(format("GRANT \"%s\" TO \"%s\"", config.getDatabaseUser(), config.getDatabaseAdminUser()));
-            statement.execute(format("CREATE SCHEMA \"%s\" AUTHORIZATION \"%s\"", config.getDatabaseUser(), config.getDatabaseUser()));
-            statement.execute(format("ALTER ROLE \"%s\" SET search_path = \"%s\"", config.getDatabaseUser(), config.getDatabaseUser()));
+
+            String quotedDatabaseUser = DbUtils.quoteValidUsername(config.getDatabaseUser());
+
+            statement.execute(
+                    format("CREATE USER %s WITH PASSWORD '%s'", quotedDatabaseUser, config.getDatabasePassword()));
+            statement.execute(format("GRANT %s TO %s", quotedDatabaseUser,
+                    DbUtils.quoteValidAdminUsername(config.getDatabaseAdminUser())));
+            statement.execute(
+                    format("CREATE SCHEMA %s AUTHORIZATION %s", quotedDatabaseUser, quotedDatabaseUser));
+            statement.execute(
+                    format("ALTER ROLE %s SET search_path = %s", quotedDatabaseUser, quotedDatabaseUser));
         }
 
         @Override
         public void dropUserAndSchema(Statement st, DatabaseAdminConfig config) {
-            swallow(() -> st.execute(format("DROP SCHEMA \"%s\" CASCADE", config.getDatabaseUser())));
-            swallow(() -> st.execute(format("DROP USER \"%s\"", config.getDatabaseUser())));
+            swallow(() -> st.execute(
+                    format("DROP SCHEMA %s CASCADE", DbUtils.quoteValidUsername(config.getDatabaseUser()))));
+            swallow(() -> st.execute(format("DROP USER %s", DbUtils.quoteValidUsername(config.getDatabaseUser()))));
         }
 
         @Override
         public void resetPassword(Statement st, DatabaseAdminConfig con) throws SQLException {
-            st.execute(format("ALTER USER \"%s\" WITH PASSWORD '%s'", con.getDatabaseUser(), con.getDatabasePassword()));
+            st.execute(format("ALTER USER %s WITH PASSWORD '%s'", DbUtils.quoteValidUsername(con.getDatabaseUser()),
+                    con.getDatabasePassword()));
         }
     },
     ORACLE() {
