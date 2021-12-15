@@ -1,0 +1,6 @@
+# !! File must end with empty line !!
+dependencies:
+- alias: preview
+  name: entando-k8s-dbjob
+  repository: file://../entando-k8s-dbjob
+  version: {{ENTANDO_PROJECT_VERSION}}
