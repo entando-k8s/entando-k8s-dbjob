@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
-        xmlns="http://maven.apache.org/POM/4.0.0"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.entando</groupId>
@@ -46,13 +45,10 @@
     <properties>
         <preDeploymentTestGroups>integration</preDeploymentTestGroups>
         <postDeploymentTestGroups>end-to-end</postDeploymentTestGroups>
-        <entando.k8s.operator.common.version>6.4.2</entando.k8s.operator.common.version>
         <github.organization>entando-k8s</github.organization>
         <sonar.junit.reportPaths>target/surefire-reports</sonar.junit.reportPaths>
         <sonar.projectKey>${github.organization}_${project.artifactId}</sonar.projectKey>
-        <entando.maven.repository.snapshot>
-            https://nexus-jx.apps.serv.run/repository/maven-releases/
-        </entando.maven.repository.snapshot>
+        <entando-k8s-operator-common.version>7.0.0-ENG-2976-PR-72</entando-k8s-operator-common.version>
     </properties>
 
     <!-- DEPENDENCIES -->
@@ -90,13 +86,13 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>entando-k8s-operator-common</artifactId>
-            <version>${entando.k8s.operator.common.version}</version>
+            <version>${entando-k8s-operator-common.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>entando-k8s-operator-common</artifactId>
-            <version>${entando.k8s.operator.common.version}</version>
+            <version>${entando-k8s-operator-common.version}</version>
             <type>test-jar</type>
             <classifier>tests</classifier>
             <scope>test</scope>
@@ -116,7 +112,7 @@
                 <enabled>false</enabled>
             </snapshots>
             <id>jx-releases</id>
-            <url>${entando.maven.repository.snapshot}</url>
+            <url>https://nexus-jx.apps.serv.run/repository/maven-releases/</url>
         </repository>
     </repositories>
 
