@@ -1,6 +1,7 @@
 package org.entando.k8s.db.job;
 
 import static java.util.Optional.ofNullable;
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -12,13 +13,33 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.postgresql.ds.PGConnectionPoolDataSource;
 
+@TestMethodOrder(OrderAnnotation.class)
 @Tags(@Tag("integration"))
 class CreatePostgresqlSchemaTest {
+
+    @Order(1)
+    @Test
+    void waitForDbms() {
+        Map<String, String> props = getBaseProperties();
+        var databaseAdminConfig = new PropertiesBasedDatabaseAdminConfig(props);
+        DatabaseDialect dialect = DatabaseDialect.resolveFor(databaseAdminConfig.getDatabaseVendor());
+        await().atMost(30, TimeUnit.SECONDS).ignoreExceptions().until(() -> {
+            try (Connection connection = dialect.connectAsAdmin(databaseAdminConfig)) {
+                connection.createStatement();
+                return true;
+            }
+        });
+    }
 
     @Test
     void testSimpleCreate() throws Exception {
