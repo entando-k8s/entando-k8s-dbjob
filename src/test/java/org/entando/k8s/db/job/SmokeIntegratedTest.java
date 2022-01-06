@@ -3,30 +3,23 @@ package org.entando.k8s.db.job;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import io.fabric8.kubernetes.api.model.EndpointsBuilder;
 import io.fabric8.kubernetes.api.model.EnvVar;
-import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodBuilder;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.LocalPortForward;
 import io.fabric8.kubernetes.client.dsl.PodResource;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.time.Duration;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.entando.kubernetes.controller.spi.common.PodResult;
 import org.entando.kubernetes.controller.spi.common.PodResult.State;
-import org.entando.kubernetes.controller.support.client.impl.DefaultEntandoResourceClient;
-import org.entando.kubernetes.controller.support.client.impl.DefaultPodClient;
 import org.entando.kubernetes.controller.support.client.impl.EntandoOperatorTestConfig;
 import org.entando.kubernetes.controller.support.common.EntandoImageResolver;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Tags;
@@ -37,37 +30,30 @@ class SmokeIntegratedTest {
 
     static final String ADMIN_USER = "postgres";
     static final String ADMIN_PASSWORD = "postgres";
-    static final String PORT = "5432";
+    static final int PORT = 5432;
+    static final int FORWARDED_LOCAL_PORT = 0;
     static final String DATABASE_NAME = "testdb";
     static final String MYSCHEMA = "myschema";
     static final String MYPASSWORD = "mypassword";
     private static final String NAMESPACE = EntandoOperatorTestConfig.calculateNameSpace("dbjob-ns");
-    static final String LOCAL_SERVICE_NAME = NAMESPACE + "-pg-service";
+    public static final String POSTGRES_POD_NAME = "pg-test";
     KubernetesClient client = new DefaultKubernetesClient();
 
+    @AfterEach
+    void cleanupNamespace() {
+        client.pods().inNamespace(NAMESPACE).delete();
+    }
+
     @BeforeEach
-    void cleanNamespace() {
+    void resetNamespace() {
         if (client.namespaces().withName(NAMESPACE).get() == null) {
-            client.namespaces().create(new NamespaceBuilder().withNewMetadata().withName(NAMESPACE).endMetadata().build());
+            client.namespaces()
+                    .create(new NamespaceBuilder().withNewMetadata().withName(NAMESPACE).endMetadata().build());
         } else {
             client.pods().inNamespace(NAMESPACE).delete();
-            await().atMost(2, TimeUnit.MINUTES).until(() -> client.pods().inNamespace(NAMESPACE).list().getItems().isEmpty());
+            await().atMost(2, TimeUnit.MINUTES)
+                    .until(() -> client.pods().inNamespace(NAMESPACE).list().getItems().isEmpty());
         }
-        cleanupLocalResources();
-    }
-
-    private void cleanupLocalResources() {
-        force(() -> client.services().inNamespace(client.getNamespace()).withName(LOCAL_SERVICE_NAME).delete());
-        force(() -> client.endpoints().inNamespace(client.getNamespace()).withName(LOCAL_SERVICE_NAME).delete());
-    }
-
-    private void force(Runnable runnable) {
-        try {
-            runnable.run();
-        } catch (RuntimeException e) {
-            Logger.getAnonymousLogger().log(Level.WARNING, "Operation failed.", e);
-        }
-
     }
 
     @Test
@@ -77,13 +63,12 @@ class SmokeIntegratedTest {
         //When I run the DBSchemaJob image against that IP
         runDbSchemaJobAgainst(ip);
         //Then I can connect to the database using the resulting schema
-        Service service = createDelegatingServiceTo(ip);
-        verifyDatabaseState(service);
-        cleanupLocalResources();//Only on success
+        var portForward = forwardPort(POSTGRES_POD_NAME, PORT);
+        verifyDatabaseState("localhost", portForward.getLocalPort());
     }
 
-    private void verifyDatabaseState(Service service) throws SQLException {
-        try (Connection connection = attemptConnection(service)) {
+    private void verifyDatabaseState(String address, int port) throws SQLException {
+        try (Connection connection = attemptConnection(address, port)) {
             connection.prepareStatement("CREATE TABLE TEST_TABLE(ID NUMERIC )").execute();
             connection.prepareStatement("TRUNCATE TEST_TABLE").execute();
             connection.prepareStatement("INSERT INTO MYSCHEMA.TEST_TABLE (ID) VALUES (5)").execute();
@@ -92,39 +77,17 @@ class SmokeIntegratedTest {
         }
     }
 
-    private Service createDelegatingServiceTo(String ip) {
-        Service service = client.services()
-                .create(new ServiceBuilder().withNewMetadata().withName(LOCAL_SERVICE_NAME).withNamespace(client.getNamespace())
-                        .endMetadata()
-                        .withNewSpec()
-                        .addNewPort()
-                        .withPort(5432)
-                        .withNewTargetPort(5432)
-                        .endPort()
-                        .endSpec()
-                        .build());
-        client.endpoints().create(new EndpointsBuilder().withNewMetadata().withName(LOCAL_SERVICE_NAME).withNamespace(client.getNamespace())
-                .endMetadata()
-                .addNewSubset()
-                .addNewAddress().withIp(ip)
-                .endAddress()
-                .addNewPort()
-                .withPort(5432)
-                .endPort()
-                .endSubset()
-                .build());
-        return service;
+    private LocalPortForward forwardPort(String podName, int remotePort) {
+        return client.pods().inNamespace(NAMESPACE).withName(podName).portForward(remotePort, FORWARDED_LOCAL_PORT);
     }
 
-    private Connection attemptConnection(Service service) throws SQLException {
+    private Connection attemptConnection(String localAddress, int localPort) throws SQLException {
+        String connectionUrl = String.format("jdbc:postgresql://%s:%d/%s", localAddress, localPort, DATABASE_NAME);
         await().atMost(1, TimeUnit.MINUTES).ignoreExceptions().until(() -> {
-            DriverManager
-                    .getConnection("jdbc:postgresql://" + service.getSpec().getClusterIP() + ":5432/" + DATABASE_NAME, MYSCHEMA, MYPASSWORD)
-                    .close();
+            DriverManager.getConnection(connectionUrl, MYSCHEMA, MYPASSWORD).close();
             return true;
         });
-        return DriverManager
-                .getConnection("jdbc:postgresql://" + service.getSpec().getClusterIP() + ":5432/" + DATABASE_NAME, MYSCHEMA, MYPASSWORD);
+        return DriverManager.getConnection(connectionUrl, MYSCHEMA, MYPASSWORD);
     }
 
     private void runDbSchemaJobAgainst(String ip) throws InterruptedException {
@@ -138,7 +101,7 @@ class SmokeIntegratedTest {
                 .withEnv(new EnvVar("DATABASE_ADMIN_USER", ADMIN_USER, null),
                         new EnvVar("DATABASE_ADMIN_PASSWORD", ADMIN_PASSWORD, null),
                         new EnvVar("DATABASE_SERVER_HOST", ip, null),
-                        new EnvVar("DATABASE_SERVER_PORT", PORT, null),
+                        new EnvVar("DATABASE_SERVER_PORT", String.valueOf(PORT), null),
                         new EnvVar("DATABASE_NAME", DATABASE_NAME, null),
                         new EnvVar("DATABASE_USER", MYSCHEMA, null),
                         new EnvVar("DATABASE_PASSWORD", MYPASSWORD, null),
@@ -146,7 +109,8 @@ class SmokeIntegratedTest {
                 )
                 .endContainer().endSpec().build());
         PodResource<Pod> job = client.pods().inNamespace(NAMESPACE).withName("dbjob");
-        job.waitUntilCondition(pod -> pod.getStatus() != null && PodResult.of(pod).getState() == State.COMPLETED, 3, TimeUnit.MINUTES);
+        job.waitUntilCondition(pod -> pod.getStatus() != null && PodResult.of(pod).getState() == State.COMPLETED, 3,
+                TimeUnit.MINUTES);
     }
 
     private String resolveImage() {
@@ -155,7 +119,7 @@ class SmokeIntegratedTest {
     }
 
     private String preparePgDb() throws InterruptedException {
-        client.pods().inNamespace(NAMESPACE).create(new PodBuilder().withNewMetadata().withName("pg-test")
+        client.pods().inNamespace(NAMESPACE).create(new PodBuilder().withNewMetadata().withName(POSTGRES_POD_NAME)
                 .endMetadata()
                 .withNewSpec().addNewContainer()
                 .withName("pg-container")
@@ -171,8 +135,9 @@ class SmokeIntegratedTest {
                         new EnvVar("POSTGRESQL_DATABASE", "testdb", null),
                         new EnvVar("POSTGRESQL_ADMIN_PASSWORD", "postgres", null))
                 .endContainer().endSpec().build());
-        PodResource<Pod> podResource = client.pods().inNamespace(NAMESPACE).withName("pg-test");
-        podResource.waitUntilCondition(pod -> pod.getStatus() != null && PodResult.of(pod).getState() == State.READY, 3, TimeUnit.MINUTES);
+        PodResource<Pod> podResource = client.pods().inNamespace(NAMESPACE).withName(POSTGRES_POD_NAME);
+        podResource.waitUntilCondition(pod -> pod.getStatus() != null && PodResult.of(pod).getState() == State.READY, 3,
+                TimeUnit.MINUTES);
         return podResource.fromServer().get().getStatus().getPodIP();
 
     }

@@ -1,11 +1,22 @@
 package org.entando.k8s.db.job;
 
 import static java.util.Optional.ofNullable;
+import static org.awaitility.Awaitility.await;
 
+import java.sql.Connection;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import oracle.jdbc.pool.OracleDataSource;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Tags;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
+@Disabled
+@TestMethodOrder(OrderAnnotation.class)
 @Tags(@Tag("integration"))
 class CreateOracle11SchemaTest extends CreateOracleSchemaTestBase {
 

@@ -1,11 +1,11 @@
 package org.entando.k8s.db.job;
 
 import static java.util.Optional.ofNullable;
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import com.mysql.cj.jdbc.MysqlDataSource;
-import io.quarkus.runtime.StartupEvent;
 import java.io.CharArrayWriter;
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -14,12 +14,30 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
+@TestMethodOrder(OrderAnnotation.class)
 @Tags(@Tag("integration"))
 class CreateMysqlSchemaTest {
+
+    @Order(1)
+    @Test
+    void waitForDbms() {
+        Map<String, String> props = getBaseProperties();
+        var databaseAdminConfig = new PropertiesBasedDatabaseAdminConfig(props);
+        DatabaseDialect dialect = DatabaseDialect.resolveFor(databaseAdminConfig.getDatabaseVendor());
+        await().atMost(30, TimeUnit.SECONDS).ignoreExceptions().until(() -> {
+            dialect.connectAsAdmin(databaseAdminConfig);
+            return true;
+        });
+    }
+
 
     @Test
     void testSimpleCreate() throws Exception {
@@ -120,7 +138,7 @@ class CreateMysqlSchemaTest {
         props.put("DATABASE_SERVER_HOST", getDatabaseServerHost());
         props.put("DATABASE_SERVER_PORT", getDatabaseServerPort());
         props.put("DATABASE_VENDOR", "mysql");
-        props.put("JDBC_PARAMETERS", "useSSL=false");
+        props.put("JDBC_PARAMETERS", "useSSL=false&allowPublicKeyRetrieval=true");
         return props;
     }
 
