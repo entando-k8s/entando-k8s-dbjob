@@ -1,31 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
-        xmlns="http://maven.apache.org/POM/4.0.0"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.entando</groupId>
         <artifactId>entando-quarkus-parent</artifactId>
-        <version>6.4.1</version>
+        <version>7.0.3</version>
         <relativePath/>
     </parent>
     <artifactId>entando-k8s-dbjob</artifactId>
-    <version>6.4.0-SNAPSHOT</version>
+    <version>7.0.0-SNAPSHOT</version>
     <name>Entando K8S Database Job</name>
     <description>Entando's K8S Database Job</description>
     <url>https://central.entando.com</url>
     <inceptionYear>2019</inceptionYear>
+
+    <!-- LICENSE AND INFO -->
     <organization>
         <name>Entando Inc.</name>
         <url>http://www.entando.com/</url>
     </organization>
+
     <licenses>
         <license>
-            <name>GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1, February 1999</name>
-            <url>https://www.gnu.org/licenses/lgpl-2.1.txt</url>
+            <name>GNU LESSER GENERAL PUBLIC LICENSE, Version 3, 29 June 2007</name>
+            <url>https://www.gnu.org/licenses/lgpl-3.0.txt</url>
             <distribution>repo</distribution>
         </license>
     </licenses>
+
+    <!-- SCM & ISSUES -->
     <scm>
         <connection>scm:git:git@github.com:${github.organization}/${project.artifactId}.git</connection>
         <developerConnection>scm:git:git@github.com:${github.organization}/${project.artifactId}.git
@@ -36,14 +40,18 @@
         <system>Github</system>
         <url>https://github.com/${github.organization}/${project.artifactId}/issues/</url>
     </issueManagement>
+
+    <!-- PROPERTIES -->
     <properties>
         <preDeploymentTestGroups>integration</preDeploymentTestGroups>
         <postDeploymentTestGroups>end-to-end</postDeploymentTestGroups>
-        <entando.k8s.operator.common.version>6.4.2</entando.k8s.operator.common.version>
         <github.organization>entando-k8s</github.organization>
         <sonar.junit.reportPaths>target/surefire-reports</sonar.junit.reportPaths>
         <sonar.projectKey>${github.organization}_${project.artifactId}</sonar.projectKey>
+        <entando-k8s-operator-common.version>7.0.0-ENG-2976-PR-72</entando-k8s-operator-common.version>
     </properties>
+
+    <!-- DEPENDENCIES -->
     <dependencies>
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -78,13 +86,13 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>entando-k8s-operator-common</artifactId>
-            <version>${entando.k8s.operator.common.version}</version>
+            <version>${entando-k8s-operator-common.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>entando-k8s-operator-common</artifactId>
-            <version>${entando.k8s.operator.common.version}</version>
+            <version>${entando-k8s-operator-common.version}</version>
             <type>test-jar</type>
             <classifier>tests</classifier>
             <scope>test</scope>
@@ -107,6 +115,8 @@
             <url>https://nexus-jx.apps.serv.run/repository/maven-releases/</url>
         </repository>
     </repositories>
+
+    <!-- BUILD -->
     <build>
         <plugins>
             <plugin>

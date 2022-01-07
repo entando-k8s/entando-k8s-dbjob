@@ -1,0 +1,38 @@
+version: '3'
+
+services:
+  init:
+    container_name: init
+    image: alpine:latest
+    command: >
+      chmod a+r -Rv docker-entrypoint-initdb.d/
+    volumes:
+      - ./files/:/docker-entrypoint-initdb.d/
+
+  postgres:
+    container_name: postgres
+    depends_on:
+      - init
+    hostname: postgres
+    image: postgres:14
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+    ports:
+      - "5432:5432"
+    volumes: 
+      - ./files/postgres_init.sql:/docker-entrypoint-initdb.d/postgres_init.sql
+
+  mysql:
+    container_name: mysql
+    depends_on:
+      - init
+    hostname: mysql
+    image: "mysql:8"
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_PASSWORD: "Password1"
+      MYSQL_ROOT_PASSWORD: "Password1"
+    volumes:
+      - ./files/mysql_init.sql:/docker-entrypoint-initdb.d/mysql_init.sql
