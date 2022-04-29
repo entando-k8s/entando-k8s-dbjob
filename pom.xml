@@ -10,7 +10,7 @@
         <relativePath/>
     </parent>
     <artifactId>entando-k8s-dbjob</artifactId>
-    <version>6.3.8-fix.1</version>
+    <version>6.5.0</version>
     <name>Entando K8S Database Job</name>
     <description>Entando's K8S Database Job</description>
     <url>https://central.entando.com</url>
