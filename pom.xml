@@ -37,8 +37,8 @@
         <url>https://github.com/${github.organization}/${project.artifactId}/issues/</url>
     </issueManagement>
     <properties>
-        <preDeploymentTestGroups>integration</preDeploymentTestGroups>
-        <postDeploymentTestGroups>end-to-end</postDeploymentTestGroups>
+        <preDeploymentTestGroups>none</preDeploymentTestGroups>
+        <postDeploymentTestGroups>none</postDeploymentTestGroups>
         <entando.k8s.operator.common.version>6.1.10</entando.k8s.operator.common.version>
         <github.organization>entando-k8s</github.organization>
         <sonar.junit.reportPaths>target/surefire-reports</sonar.junit.reportPaths>
