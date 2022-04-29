@@ -3,7 +3,7 @@ ARG VERSION
 LABEL name="Entando K8S DB Job" \
       vendor="Entando" \
       version="v${VERSION}" \
-      release="6" \
+      release="7.0" \
       summary="This container creates database schemas and matching users." \
       description="This is a run-to-completion container. It will create a database schema and a matching user \
                    using the previously created schema as a default schema for the user in question. \

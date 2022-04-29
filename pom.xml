@@ -9,7 +9,7 @@
         <relativePath/>
     </parent>
     <artifactId>entando-k8s-dbjob</artifactId>
-    <version>7.0.0</version>
+    <version>7.0.2</version>
     <name>Entando K8S Database Job</name>
     <description>Entando's K8S Database Job</description>
     <url>https://central.entando.com</url>
@@ -48,7 +48,7 @@
         <github.organization>entando-k8s</github.organization>
         <sonar.junit.reportPaths>target/surefire-reports</sonar.junit.reportPaths>
         <sonar.projectKey>${github.organization}_${project.artifactId}</sonar.projectKey>
-        <entando-k8s-operator-common.version>7.0.1-ENG-3564-PR-103</entando-k8s-operator-common.version>
+        <entando-k8s-operator-common.version>7.0.2</entando-k8s-operator-common.version>
     </properties>
 
     <!-- DEPENDENCIES -->
