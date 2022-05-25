@@ -50,33 +50,33 @@ public enum DatabaseDialect {
 
         @Override
         public void createUserAndSchema(Statement statement, DatabaseAdminConfig config) throws SQLException {
-            statement.execute(format("CREATE DATABASE  %s", config.getDatabaseUser()));
+            statement.execute(format("CREATE DATABASE `%s`", config.getDatabaseUser()));
             statement.execute(
-                    format("CREATE USER '%s'@'%%' IDENTIFIED BY '%s';",
+                    format("CREATE USER `%s`@'%%' IDENTIFIED BY '%s';",
                             config.getDatabaseUser(),
                             config.getDatabasePassword()));
             statement.execute(
-                    format("GRANT ALL PRIVILEGES ON %s.* TO '%s'@'%%' WITH GRANT OPTION;",
+                    format("GRANT ALL PRIVILEGES ON `%s`.* TO `%s`@'%%' WITH GRANT OPTION;",
                             config.getDatabaseUser(),
                             config.getDatabaseUser()));
             if (statement.getConnection().getMetaData().getDatabaseMajorVersion() >= 8) {
                 //See https://stackoverflow.com/questions/56831529/configuring-a-xa-datasource-to-mysql-8-db-with-spring-boot-and
                 // -bitronix-jta-mana
                 statement.execute(
-                        format("GRANT XA_RECOVER_ADMIN ON *.* TO '%s'@'%%';",
+                        format("GRANT XA_RECOVER_ADMIN ON *.* TO `%s`@'%%';",
                                 config.getDatabaseUser()));
             }
         }
 
         @Override
         public void dropUserAndSchema(Statement st, DatabaseAdminConfig config) {
-            swallow(() -> st.execute(format("DROP DATABASE IF EXISTS %s", config.getDatabaseUser())));
-            swallow(() -> st.execute(format("DROP USER '%s'@'%%'", config.getDatabaseUser())));
+            swallow(() -> st.execute(format("DROP DATABASE IF EXISTS `%s`", config.getDatabaseUser())));
+            swallow(() -> st.execute(format("DROP USER `%s`@'%%'", config.getDatabaseUser())));
         }
 
         @Override
         public void resetPassword(Statement st, DatabaseAdminConfig databaseAdminConfig) throws SQLException {
-            st.execute(format("ALTER USER %s IDENTIFIED BY '%s';", databaseAdminConfig.getDatabaseUser(),
+            st.execute(format("ALTER USER `%s` IDENTIFIED BY '%s';", databaseAdminConfig.getDatabaseUser(),
                     databaseAdminConfig.getDatabasePassword()));
         }
     },
