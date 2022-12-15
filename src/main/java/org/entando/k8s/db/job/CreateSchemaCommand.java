@@ -7,12 +7,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import picocli.CommandLine;
-import picocli.CommandLine.Command;
 
 @ApplicationScoped
 @CommandLine.Command()
 public class CreateSchemaCommand implements Runnable {
 
+    
     private static final Logger LOGGER = Logger.getLogger(CreateSchemaCommand.class.getName());
     private final DatabaseAdminConfig databaseAdminConfig;
 
