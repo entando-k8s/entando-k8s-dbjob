@@ -1,9 +1,9 @@
-FROM entando/entando-java-base:11.0.3
+FROM entando/entando-java-base:v17.0.9-ENG-5316-PR-17-BB-release-2F-17.0
 ARG VERSION
 LABEL name="Entando K8S DB Job" \
       vendor="Entando" \
       version="v${VERSION}" \
-      release="7.2" \
+      release="7.3" \
       summary="This container creates database schemas and matching users." \
       description="This is a run-to-completion container. It will create a database schema and a matching user \
                    using the previously created schema as a default schema for the user in question. \
