@@ -108,7 +108,7 @@ class SmokeIntegratedTest {
                         new EnvVar("DATABASE_VENDOR", "postgresql", null)
                 )
                 .endContainer().endSpec().build());
-        PodResource<Pod> job = client.pods().inNamespace(NAMESPACE).withName("dbjob");
+        PodResource job = client.pods().inNamespace(NAMESPACE).withName("dbjob");
         job.waitUntilCondition(pod -> pod.getStatus() != null && PodResult.of(pod).getState() == State.COMPLETED, 3,
                 TimeUnit.MINUTES);
     }
@@ -135,7 +135,7 @@ class SmokeIntegratedTest {
                         new EnvVar("POSTGRESQL_DATABASE", "testdb", null),
                         new EnvVar("POSTGRESQL_ADMIN_PASSWORD", "postgres", null))
                 .endContainer().endSpec().build());
-        PodResource<Pod> podResource = client.pods().inNamespace(NAMESPACE).withName(POSTGRES_POD_NAME);
+        PodResource podResource = client.pods().inNamespace(NAMESPACE).withName(POSTGRES_POD_NAME);
         podResource.waitUntilCondition(pod -> pod.getStatus() != null && PodResult.of(pod).getState() == State.READY, 3,
                 TimeUnit.MINUTES);
         return podResource.fromServer().get().getStatus().getPodIP();
