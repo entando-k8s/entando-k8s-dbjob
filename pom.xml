@@ -51,7 +51,6 @@
         <sonar.projectKey>${github.organization}_${project.artifactId}</sonar.projectKey>
         <entando-k8s-operator-common.version>7.3.0-fix.1-ESB-513-PR-165</entando-k8s-operator-common.version>
 <!--        <entando-k8s-operator-common.version>7.3.0-fix.1</entando-k8s-operator-common.version>-->
-        <sonar.skip>true</sonar.skip>
     </properties>
 
     <!-- DEPENDENCIES -->
