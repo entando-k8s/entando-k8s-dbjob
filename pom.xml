@@ -5,11 +5,11 @@
     <parent>
         <groupId>org.entando</groupId>
         <artifactId>entando-quarkus-parent</artifactId>
-        <version>7.3.0</version>
+        <version>7.3.0-fix.1</version>
         <relativePath/>
     </parent>
+    <version>7.3.0-fix.1</version>
     <artifactId>entando-k8s-dbjob</artifactId>
-    <version>7.3.0</version>
     <name>Entando K8S Database Job</name>
     <description>Entando's K8S Database Job</description>
     <url>https://central.entando.com</url>
@@ -48,7 +48,7 @@
         <github.organization>entando-k8s</github.organization>
         <sonar.junit.reportPaths>target/surefire-reports</sonar.junit.reportPaths>
         <sonar.projectKey>${github.organization}_${project.artifactId}</sonar.projectKey>
-        <entando-k8s-operator-common.version>7.3.0</entando-k8s-operator-common.version>
+        <entando-k8s-operator-common.version>7.3.0-fix.1</entando-k8s-operator-common.version>
     </properties>
 
     <!-- DEPENDENCIES -->
@@ -97,9 +97,9 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>entando-k8s-operator-common</artifactId>
             <version>${entando-k8s-operator-common.version}</version>
+            <scope>test</scope>
             <type>test-jar</type>
             <classifier>tests</classifier>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.awaitility</groupId>

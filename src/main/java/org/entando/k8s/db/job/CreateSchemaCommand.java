@@ -1,11 +1,11 @@
 package org.entando.k8s.db.job;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.enterprise.context.ApplicationScoped;
 import picocli.CommandLine;
 
 @ApplicationScoped
